@@ -1,0 +1,39 @@
+---
+title: "Step 2: Simulate Welfare"
+---
+
+## Overview
+
+The Simulate Welfare step uses the model fitted in Step 1 to predict how welfare would vary under a wide range of weather conditions based on historical observations and future projections. This allows users to understand the distribution of weather-driven welfare outcomes and the probability of adverse outcomes such as high poverty rates.
+
+## Interface
+
+![Simulate Welfare Interface](images/step2-screenshot.png)
+
+## Instructions
+
+### 2.1 Historical Simulations
+
+Using the empirical distribution of historical weather from ERA5-Land (up to 75 years), WISE-APP predicts welfare outcomes for each observed weather year. This produces a distribution of simulated consumption or poverty rates reflecting the historical range of weather variability.
+<!-- 
+### 2.2 Stochastic Catalog
+
+To capture rare or extreme weather events that may not appear in the historical record, WISE-APP can generate a stochastic catalog of 10,000 simulated years. This is achieved by adding structured random noise to historical observations, enabling a richer characterisation of tail risks.
+ -->
+### 2.3 Future Climate Scenarios
+
+WISE-APP applies a **delta method** to project future welfare impacts under climate change. Historical weather data are perturbed using change fields derived from CMIP6 climate model simulations under three shared socioeconomic pathways:
+
+- **SSP 2-4.5** — Intermediate emissions scenario.
+- **SSP 3-7.0** — High emissions scenario.
+- **SSP 5-8.5** — Very high emissions scenario.
+
+### 2.4 Interpreting Results
+
+Results are summarised using **exceedance probability curves**, which show the annual probability that a specific poverty rate (or welfare level) will be exceeded. These curves are a standard tool for risk communication and are useful for comparing scenarios.
+
+## Tips and Common Issues
+
+- **Tip:** Use the stochastic catalog when the focus is on low-probability, high-impact weather events — 75 years of historical data may undersample extreme tails.
+- **Tip:** Compare exceedance curves across SSP scenarios to communicate the range of climate risk to policymakers.
+- **Issue:** Future projections are sensitive to the choice of CMIP6 models underpinning the delta fields — treat results as scenario-based estimates, not forecasts.

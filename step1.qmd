@@ -1,0 +1,52 @@
+---
+title: "Step 1: Model Welfare"
+---
+
+## Overview
+
+This step establishes the statistical relationship between weather and welfare outcomes. This forms the foundation for all subsequent simulation and policy analysis. Users select their survey and weather data, specify a welfare outcome, choose weather/hazard variables, and configure a model to quantify the relationship between weather and welfare and how this varies across different population groups.
+
+## Interface
+
+![Model Welfare Interface](images/step1-screenshot.png)
+
+## Instructions
+
+### 1.1 Sample Selection
+
+Select the level of analysis...
+
+Select the economy of interest and survey years available for that economy. Click **Survey Stats** to generate summary statistics, interview location maps, and welfare distribution plots for the selected sample.
+
+### 1.2 Welfare Outcome
+
+Choose the welfare outcome to model:
+
+- **Continuous outcomes** — e.g. household consumption in $/day.
+- **Binary outcomes** — e.g. poverty status, defined against a specific poverty line.
+
+### 1.3 Weather Variables
+
+Select and configure up to 10 weather variables from the ERA5-Land dataset. For each variable, define:
+
+- The **reference period** (e.g. how many months before the interview date).
+- The **aggregation method** across the reference period (e.g. mean, sum, max).
+- Any **transformation** to apply (e.g. deviation from long-run mean).
+
+Click **Weather Stats** to generate summary statistics and diagnostic plots for the selected weather variables.
+
+### 1.4 Model Specification
+
+Configure the regression model:
+
+- **Continuous outcomes** default to a linear regression with fixed effects.
+- **Binary outcomes** default to a logistic regression.
+- Optionally add **interaction terms**, **fixed effects**, and **control variables** (e.g. household size).
+
+Run the model to generate a regression table, coefficient plot, and model fit diagnostics, including each variable's contribution to R-squared.
+
+## Tips and Common Issues
+
+- **Tip:** Use the deviation-from-mean transformation for weather variables when you want to capture the effect of anomalous conditions rather than absolute weather levels.
+- **Tip:** Check the coefficient plot to identify which weather variables have the strongest and most statistically significant relationships with welfare.
+- **Issue:** If the model fit is poor, consider refining the reference period for weather variables to better align with the economic calendar of the survey population.

@@ -1,0 +1,40 @@
+---
+title: "Step 3: Policy Scenarios"
+---
+
+## Overview
+
+The Policy Scenarios step evaluates how specific adaptation policies can reduce the welfare impact of weather shocks. Users modify household or area characteristics that interact with weather in the model, and WISE-APP re-simulates the welfare distribution under the counterfactual policy. This quantifies both the direct welfare gains and the reduction in weather sensitivity (resilience).
+
+## Interface
+
+![Policy Scenarios Interface](images/step3-screenshot.png)
+
+## Instructions
+
+### 3.1 Define a Policy Experiment
+
+Select a policy intervention to simulate. Available experiments include:
+
+- **Universal access to electricity** — all households are assigned access to electricity.
+- **Improved drinking water and sanitation** — all households are assigned access to improved water and sanitation facilities.
+- **Minimum education levels** — all adult household members are assigned a minimum level of educational attainment.
+
+These policies work by modifying the household characteristics that interact with weather variables in the regression model from Step 1.
+
+### 3.2 Run the Policy Simulation
+
+Once a policy is defined, WISE-APP re-runs the welfare simulation using the modified household characteristics. This generates a new distribution of simulated welfare outcomes under the policy counterfactual, which can be compared directly against the baseline from Step 2.
+
+### 3.3 Interpret Results
+
+Results show the policy's impact on two dimensions:
+
+- **Welfare level** — the change in average consumption or poverty rate.
+- **Weather sensitivity** — the change in the slope of the exceedance probability curve, indicating whether households are more or less resilient to weather shocks under the policy.
+
+## Tips and Common Issues
+
+- **Tip:** A policy that flattens the exceedance curve (reduces its slope) indicates improved resilience — households are less exposed to weather-driven poverty spikes, even if the average welfare level is unchanged.
+- **Tip:** Compare multiple policy experiments to identify which interventions provide the greatest resilience gains for the specific population and weather context.
+- **Issue:** Policy effects are identified through the interaction terms in the Step 1 model — if no interaction terms were specified, policy experiments will only affect the intercept and not weather sensitivity.

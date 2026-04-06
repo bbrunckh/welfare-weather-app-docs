@@ -1,0 +1,16 @@
+/* Custom styles for WISE-APP User Guide */
+
+/* Sidebar */
+.sidebar {
+  background-color: #f8f9fa;
+}
+
+/* Chapter titles */
+h1.title {
+  color: #002244;
+}
+
+/* Callout blocks — adjust brand colours as needed */
+.callout-tip {
+  border-left-color: #1F7A8C;
+}

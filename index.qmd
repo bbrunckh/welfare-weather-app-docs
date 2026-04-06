@@ -1,0 +1,28 @@
+---
+title: "Overview"
+---
+
+## Welcome to WISE-APP
+
+WISE-APP (Weather Impact Simulation and Evaluation for Adaptation Policy and Planning) is a tool designed to estimate potential welfare outcomes under different weather conditions before events occur. It helps policymakers quantify the relationship between weather and welfare, simulate outcomes under historical and future climate scenarios, and evaluate the impact of various adaptation policies.
+
+This user guide walks you through all key features and steps needed to use the application effectively.
+
+## How to Access WISE-APP
+
+The application is hosted on Posit Connect and can be accessed at:
+
+[**Launch WISE-APP**](https://your-posit-connect-url/wise-app)  *(update with real link)*
+
+## Guide Structure
+
+This guide is organised into the following chapters:
+
+- **Data** — An overview of the household survey and weather data that underpin WISE-APP, including sources, structure, and coverage.
+- **Model Welfare** — Establish the statistical relationship between weather and welfare outcomes, and identify the most vulnerable populations.
+- **Simulate Welfare** — Use the fitted model to simulate how welfare would vary across historical, stochastic, and future climate scenarios.
+- **Policy Scenarios** — Evaluate how specific adaptation policies can mitigate the impact of weather shocks and improve household resilience.
+
+## Getting Help
+
+If you encounter any issues or have questions, please contact [contact name/email/team].

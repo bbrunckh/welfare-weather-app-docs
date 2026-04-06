@@ -1,0 +1,182 @@
+---
+title: "WISE-APP Data"
+---
+
+## Overview
+
+WISE-APP connects to a data directory on a local or remote file system. The directory contains three top-level components: **metadata**, **microdata**, and **hazard** data. Microdata and hazard data are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with the weather and events data.
+
+## Directory Structure
+
+```
+data/
+├── metadata/
+│   ├── survey_list.csv
+│   ├── variable_list.csv
+│   └── cpi_ppp.csv
+│
+├── microdata/
+│   ├── hh/{code}/
+│   ├── ind/{code}/
+│   ├── firm/{code}/
+│   └── h3/{code}/
+│
+└── hazard/
+    ├── weather/
+    │   ├── historical/{code}/
+    │   └── projections/{code}/
+    └── events/
+        ├── historical/{code}/
+        └── probabilistic/{code}/
+```
+
+`{code}` is the ISO 3166-1 alpha-3 country code (e.g. `GNB`, `NGA`, `ETH`).
+
+The data directory can be stored locally or on a supported remote file system: AWS S3, Google Cloud Storage, Azure Data Lake, Hugging Face, or Databricks.
+
+---
+
+## Metadata
+
+Three small CSV files are loaded once when WISE-APP connects to the data directory. They drive UI filtering, variable labelling, and monetary comparability adjustments.
+
+### `survey_list.csv`
+
+One row per survey–level combination for which a microdata file exists.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `economy` | string | Economy name |
+| `code` | string | Country code |
+| `year` | integer | Starting year of survey |
+| `survname` | string | Survey acronym (e.g. `EHCVM`, `LSMS`) |
+| `level` | string | Unit of observation: `hh`, `ind`, or `firm` |
+| `obs` | integer | Number of observations |
+| `source` | string | Data source |
+
+### `variable_list.csv`
+
+One row per variable. Controls which variables appear in the UI, how they are labelled, and how they are used in modelling.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `name` | string | Variable name as it appears in the microdata |
+| `label` | string | Human-readable label shown in the UI |
+| `type` | string | R data type: `numeric`, `integer`, `logical`, `factor`, `character`, `Date` |
+| `units` | string | Unit of measurement (e.g. `LCU/day`, `years`, `mm`) |
+| `id` | binary | 1 if ID, date, or other special variable |
+| `outcome` | binary | 1 if outcome of interest |
+| `hazard` | binary | 1 if hazard/weather variable |
+| `ind` | binary | 1 if measured at individual level |
+| `hh` | binary | 1 if measured at household level |
+| `firm` | binary | 1 if measured at firm level |
+| `area` | binary | 1 if measured at area level |
+| `interact` | binary | 1 if available as an interaction term in the model |
+| `fe` | binary | 1 if available as a fixed effect in the model |
+
+The following variables must be present: `code`, `economy`, `year`, `survname`, `int_year`, `int_month`, `loc_id`, `h3`, `timestamp`, at least one outcome variable, and at least one hazard variable.
+
+### `cpi_ppp.csv`
+
+One row per country–year–data level. Used to convert welfare aggregates from local currency units to comparable 2021 PPP USD.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `code` | string | Country code |
+| `year` | integer | Starting year of survey |
+| `data_level` | string | Geographic level of price data (e.g. `national`, `urban`, `rural`) |
+| `cpi` | numeric | Consumer price index |
+| `ppp2021` | numeric | PPP conversion factor relative to 2021 USD |
+
+---
+
+## Microdata
+
+All microdata files are in **Parquet format**, named `{code}_{year}_{survname}_{source}_{level}.parquet` and stored under `microdata/{level}/{code}/`. For example:
+
+```
+microdata/hh/GNB/GNB_2018_EHCVM_GMD_hh.parquet
+microdata/ind/GNB/GNB_2018_EHCVM_GMD_ind.parquet
+microdata/firm/GNB/GNB_2018_EHCVM_GMD_firm.parquet
+microdata/h3/GNB/GNB_2018_EHCVM_GMD_h3.parquet
+```
+
+All microdata files must include: `code`, `economy`, `year`, `survname`, `int_year`, `int_month`, `loc_id`, and at least one outcome variable.
+
+### Household file — `_hh.parquet`
+
+One row per household. Key columns include `hhid`, `welfare` (welfare per day), `hhsize`, interview date fields, and spatial unit `loc_id`.
+
+### Individual file — `_ind.parquet`
+
+One row per individual. Key columns include `hhid`, `pid`, `wage` (wage per day), `age`, interview date fields, and `loc_id`.
+
+### Firm file — `_firm.parquet`
+
+One row per firm. Key columns include `fid`, `revenue` (revenue per day), `employees`, interview date fields, and `loc_id`.
+
+### H3 lookup file — `_h3.parquet`
+
+One row per H3 cell per location. This is the **spatial bridge** between microdata and all hazard data — a single H3 file covers both `_hh.parquet` and `_ind.parquet` from the same survey. Required columns are `code`, `year`, `survname`, `loc_id`, and `h3`. The optional `pop_2020` column (GHS-POP 2020 population) is used to weight hazard variables within locations when available.
+
+H3 cell indices are stored as hexadecimal strings (e.g. `8928308280fffff`) but are 64-bit integers under the hood. Cell resolution is not fixed — merges are performed across resolutions using H3 parent/child relationships.
+
+---
+
+## Hazard Data
+
+All hazard files are in **Parquet format**, spatially indexed using H3 cells and temporally indexed at monthly resolution. The H3 index is the join key to the `_h3.parquet` lookup, which maps H3 cells to `loc_id` in the microdata.
+
+### Weather — Historical
+
+Stored under `hazard/weather/historical/{code}/`. One row per H3 cell per month, covering the full historical record of the source dataset.
+
+Filename: `{code}_{source}.parquet` — e.g. `GNB_era5land.parquet`, `GNB_chirps3.parquet`.
+
+Key columns: `h3`, `timestamp` (first day of month), plus weather variables such as `t` (monthly temperature °C), `tx` (daily maximum temperature °C), `spei6` (6-month SPEI), and others.
+
+### Weather — Projected
+
+Stored under `hazard/weather/projections/{code}/`. Same schema as historical weather, plus a `model` column for multi-model ensembles (e.g. CMIP6).
+
+Filename: `{code}_{source}_{scenario}.parquet` — e.g.:
+
+```
+GNB_cmip6_historical.parquet   # historical simulation (1950–2014)
+GNB_cmip6_ssp245.parquet       # SSP 2-4.5 (2015–2100)
+GNB_cmip6_ssp370.parquet       # SSP 3-7.0 (2015–2100)
+GNB_cmip6_ssp585.parquet       # SSP 5-8.5 (2015–2100)
+```
+
+The historical scenario covers 1950–2014 and the SSP scenarios cover 2015–2100. These are used together to compute climate change deltas applied in the Simulate Welfare step.
+
+### Events
+
+> **Under development — not yet implemented in WISE-APP.**
+
+Historical and probabilistic event data (e.g. floods, cyclones) are planned for a future release. Historical event files will contain one row per H3 cell per discrete event; probabilistic files will contain one row per H3 cell per return period.
+
+---
+
+## Spatial Integration: H3
+
+WISE-APP uses the [H3 spatial indexing system](https://h3geo.org) to flexibly join microdata and hazard data:
+
+- Survey microdata files include `loc_id` (unique spatial unit), `int_year`, and `int_month`.
+- H3 lookup files map each `loc_id` to one or more H3 hexagon cell IDs.
+- Hazard files include `h3` and `timestamp`, matched to survey locations and interview dates via the H3 lookup.
+
+One or more survey observations are mapped to a spatial unit `loc_id`, which is represented by one or more H3 hexagons. Merges across H3 resolutions are handled using H3 parent/child relationships.
+
+![H3 spatial mapping](images/locations.png)
+
+# Data sources
+
+## GMD household surveys
+
+## ERA5-Land climate reanalysis
+
+## CMIP6 climate projections
+
+
+---

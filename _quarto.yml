@@ -1,0 +1,42 @@
+project:
+  type: book
+  output-dir: _book
+
+book:
+  title: "WISE-APP Docs"
+  author: "Ben Brunckhorst"
+  date: today
+  description: "WISE-APP documentation and user guide."
+  
+  chapters:
+    - index.qmd
+    - data.qmd
+    - step1.qmd
+    - step2.qmd
+    - step3.qmd
+
+  sidebar:
+    style: docked
+    search: true
+
+  navbar:
+    right:
+      - icon: github
+        href: https://github.com/your-org/wise-app  # update or remove
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    highlight-style: github
+
+execute:
+  freeze: auto
+  echo: true
+  warning: false
+  message: false

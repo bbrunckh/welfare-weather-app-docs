@@ -34,6 +34,14 @@ data/
 
 The data directory can be stored locally or on a supported remote file system: AWS S3, Google Cloud Storage, Azure Data Lake, Hugging Face, or Databricks.
 
+## Data sources
+
+### GMD household surveys
+
+### ERA5-Land climate reanalysis
+
+### CMIP6 climate projections
+
 ---
 
 ## Metadata
@@ -170,13 +178,6 @@ One or more survey observations are mapped to a spatial unit `loc_id`, which is 
 
 ![H3 spatial mapping](images/locations.png)
 
-# Data sources
-
-## GMD household surveys
-
-## ERA5-Land climate reanalysis
-
-## CMIP6 climate projections
 
 
 ---

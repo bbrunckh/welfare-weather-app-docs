@@ -4,7 +4,9 @@ title: "Step 3: Policy Scenarios"
 
 ## Overview
 
-The Policy Scenarios step evaluates how specific adaptation policies can reduce the welfare impact of weather shocks. Users modify household or area characteristics that interact with weather in the model, and WISE-APP re-simulates the welfare distribution under the counterfactual policy. This quantifies both the direct welfare gains and the reduction in weather sensitivity (resilience).
+The Policy Scenarios step evaluates how specific adaptation interventions would change the welfare distribution produced in Step 2. WISE-APP re-runs the welfare simulation under a counterfactual in which household or area characteristics have been modified according to the chosen policy. This quantifies both direct welfare gains (a shift in the level of the exceedance curve) and changes in weather sensitivity (a change in the slope of the curve, i.e. resilience).
+
+Four types of policy intervention are available: social protection, infrastructure, digital inclusion, and labour market.
 
 ## Interface
 
@@ -12,29 +14,101 @@ The Policy Scenarios step evaluates how specific adaptation policies can reduce 
 
 ## Instructions
 
-### 3.1 Define a Policy Experiment
+### 3.1 Social Protection
 
-Select a policy intervention to simulate. Available experiments include:
+Configure a cash transfer programme to eligible households.
 
-- **Universal access to electricity** — all households are assigned access to electricity.
-- **Improved drinking water and sanitation** — all households are assigned access to improved water and sanitation facilities.
-- **Minimum education levels** — all adult household members are assigned a minimum level of educational attainment.
+#### Programme type
 
-These policies work by modifying the household characteristics that interact with weather variables in the regression model from Step 1.
+- **Shock-responsive** (default) — the programme activates only when a weather event crosses a defined trigger threshold.
+- **Regular** — a standing transfer programme that runs regardless of weather conditions.
 
-### 3.2 Run the Policy Simulation
+#### Trigger (shock-responsive only)
 
-Once a policy is defined, WISE-APP re-runs the welfare simulation using the modified household characteristics. This generates a new distribution of simulated welfare outcomes under the policy counterfactual, which can be compared directly against the baseline from Step 2.
+Select the type of threshold that activates the programme and specify the trigger value:
 
-### 3.3 Interpret Results
+- **Return period of event ≥ x years** (default: 10) — the programme activates when the weather event has a return period of at least x years (i.e. a 1-in-x year event or worse).
+- **Weather variable exceeds x** — the programme activates when a specific weather variable surpasses a numeric threshold.
+- **Modelled welfare loss ≥ $x** — the programme activates when the model predicts that average welfare will fall by at least $x.
+- **Modelled increase in poverty gap ≥ $x** — the programme activates when the model predicts the poverty gap will increase by at least $x.
 
-Results show the policy's impact on two dimensions:
+#### Targeting
 
-- **Welfare level** — the change in average consumption or poverty rate.
-- **Weather sensitivity** — the change in the slope of the exceedance probability curve, indicating whether households are more or less resilient to weather shocks under the policy.
+Select which households receive the transfer:
+
+- **Ex-ante poor** (default) — households below the welfare threshold in the survey (bottom 20% by default). The poorest percentile cutoff is adjustable (5–60%).
+- **Universal** — all households receive the transfer.
+- **Predicted poor at trigger** — households predicted to fall below the poverty line when the trigger condition is met.
+- **Proxy means test (PMT)** — households identified by a composite index of observable characteristics.
+- **Geographic** — households in the worst-affected administrative regions.
+
+For all non-universal targeting methods, specify:
+
+- **Inclusion error** (default 10%) — the share of non-eligible households incorrectly included in the programme.
+- **Exclusion error** (default 10%) — the share of eligible households incorrectly excluded.
+
+#### Budget and transfer amount
+
+Two budget modes are available:
+
+- **Transfer-first** (default) — specify the transfer amount per household ($/HH); the total programme budget is derived from the number of beneficiaries.
+- **Budget-first** — specify the total programme budget; the per-household transfer is derived from the number of beneficiaries. Budget can be set as a fixed amount, a share of modelled welfare loss, a proportion of the poverty increase, or based on the annual expected loss.
+
+Specify the **administrative cost** (0–40%, default 10%). Admin costs are deducted from the total budget before calculating per-household transfers.
+
+#### Timing
+
+For regular programmes, specify the number of transfer payments per year (default: 6). For shock-responsive programmes, the transfer is a one-time payment at activation.
+
+### 3.2 Infrastructure
+
+Modify the share of households with access to physical infrastructure. For each dimension, either set access to **universal** (100%) or specify a **percentage change** from the survey baseline (−20% to +100%, default 0%).
+
+- **Electricity access**
+- **Improved drinking water access**
+- **Improved sanitation access**
+- **Health facility access** — specified as either a percentage reduction in travel time or a cap on maximum travel time (minutes).
+
+### 3.3 Digital Inclusion
+
+Modify the share of households with access to digital services. Same configuration pattern as infrastructure (universal or percentage change):
+
+- **Internet access**
+- **Mobile phone ownership**
+
+### 3.4 Labour Market
+
+Modify aggregate labour market conditions by specifying changes in percentage points from the survey baseline:
+
+- **Labour force participation** — change in pp (−20 to +20 pp, default 0).
+- **Employment rate** — change in pp (−20 to +20 pp, default 0).
+- **Sectoral composition** — shift toward agriculture, manufacturing, or services.
+
+### 3.5 Running the Policy Simulation
+
+Once the policy parameters are set, click **Run simulation**. WISE-APP re-runs the Step 2 simulation with the modified household and area characteristics, producing a counterfactual welfare distribution that can be compared directly against the Step 2 baseline.
+
+### 3.6 Interpreting Results
+
+Results show the policy's impact on two dimensions, displayed as overlaid exceedance curves (baseline vs. policy counterfactual):
+
+- **Welfare level** — a vertical shift of the exceedance curve indicates a direct change in average welfare. An upward shift (for welfare) or leftward shift (for poverty) means households are better off on average under the policy.
+- **Weather sensitivity / resilience** — a change in the slope of the exceedance curve indicates that the relationship between weather and welfare has changed. A flatter curve under the policy means households are less exposed to weather-driven welfare swings — i.e. the policy improves resilience.
+
+**How policies work in the model:**
+
+- **Infrastructure, digital, and labour market policies** modify the covariate values for affected households. The welfare change is computed through the regression coefficients estimated in Step 1. If a variable appears in an interaction term with a weather variable (Step 1, interaction settings), changing it will also change the weather sensitivity of welfare — this is how these policies produce resilience effects.
+- **Social protection policies** add a direct income transfer to eligible households, shifting their welfare upward by the transfer amount. When triggered by weather events, the transfer partially offsets weather-driven welfare losses.
+
+::: {.callout-note}
+## Development status
+Infrastructure, digital inclusion, and labour market scenario results are available in the current release. The full social protection simulation — including trigger activation, targeting errors, and budget mechanics — is under active development.
+:::
 
 ## Tips and Common Issues
 
-- **Tip:** A policy that flattens the exceedance curve (reduces its slope) indicates improved resilience — households are less exposed to weather-driven poverty spikes, even if the average welfare level is unchanged.
-- **Tip:** Compare multiple policy experiments to identify which interventions provide the greatest resilience gains for the specific population and weather context.
-- **Issue:** Policy effects are identified through the interaction terms in the Step 1 model — if no interaction terms were specified, policy experiments will only affect the intercept and not weather sensitivity.
+- **Tip:** A policy that flattens the exceedance curve without shifting its level indicates a pure resilience effect — the policy does not change average welfare but reduces exposure to weather extremes. This is a distinct and valuable outcome for climate adaptation.
+- **Tip:** Compare the resilience effects of different policy types. Infrastructure and digital policies tend to reduce weather sensitivity when the relevant variables appear in interaction terms in Step 1; labour market policies shift the sectoral composition and can affect exposure to weather shocks differently.
+- **Tip:** Run multiple policies individually before combining them. This allows you to attribute the combined effect to its components.
+- **Issue:** If a policy produces no change in weather sensitivity, check whether the modified variable was included as an interaction term in Step 1. Variables that only enter the model as main-effect covariates will shift the welfare level but not the slope of the exceedance curve.
+- **Issue:** Policy effects are conditional on the Step 1 model specification. Policies that target variables not present in the survey data, or not selected as covariates, will have no effect in the simulation.

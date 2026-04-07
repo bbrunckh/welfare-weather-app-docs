@@ -4,7 +4,7 @@ title: "Step 1: Model Welfare"
 
 ## Overview
 
-This step establishes the statistical relationship between weather and welfare outcomes. This forms the foundation for all subsequent simulation and policy analysis. Users select their survey and weather data, specify a welfare outcome, choose weather/hazard variables, and configure a model to quantify the relationship between weather and welfare and how this varies across different population groups.
+This step establishes the statistical relationship between weather and welfare outcomes. It forms the foundation for all subsequent simulation and policy analysis. Users select their survey and weather data, specify a welfare outcome, choose weather variables, and configure a model that quantifies how weather affects welfare and how that relationship varies across population groups.
 
 ## Interface
 
@@ -14,9 +14,9 @@ This step establishes the statistical relationship between weather and welfare o
 
 ### 1.1 Sample Selection
 
-Select the level of analysis...
+Select the **unit of analysis**: Individual, Household (default), or Firm. This determines which survey microdata are loaded and which variables are available in the model.
 
-Select the economy of interest and survey years available for that economy. Click **Survey Stats** to generate summary statistics, interview location maps, and welfare distribution plots for the selected sample.
+Select the **economy** of interest (up to two economies can be combined) and the **survey years** available for each economy. Click **Survey Stats** to generate summary statistics, interview location maps, and welfare distribution plots for the selected sample.
 
 ### 1.2 Welfare Outcome
 
@@ -25,13 +25,29 @@ Choose the welfare outcome to model:
 - **Continuous outcomes** — e.g. household consumption in $/day.
 - **Binary outcomes** — e.g. poverty status, defined against a specific poverty line.
 
+For monetary outcomes, select the **currency**:
+
+- **PPP (2021)** (default) — expressed in 2021 international dollars, enabling cross-country comparison.
+- **LCU (2021)** — expressed in local currency units for 2021.
+
+If the selected outcome is poverty status (`poor`), specify the **poverty line**:
+
+- Default: $3.00/day in PPP, or the 20th percentile of the welfare distribution in LCU.
+- The poverty line can be edited manually.
+
 ### 1.3 Weather Variables
 
-Select and configure up to 10 weather variables from the ERA5-Land dataset. For each variable, define:
+Select up to two weather variables from the ERA5-Land dataset. For each variable, configure:
 
-- The **reference period** (e.g. how many months before the interview date).
-- The **aggregation method** across the reference period (e.g. mean, sum, max).
-- Any **transformation** to apply (e.g. deviation from long-run mean).
+- **Reference period** — how many months before the interview date the weather is measured (slider 0–12 months, default: 1 month). Choose a reference period that corresponds to the economic season most relevant to the survey population (e.g. the growing season for agricultural households).
+- **Temporal aggregation** — how weather is summarised across the reference period: Mean, Median, Min, Max, or Sum. Sum is the default for precipitation (mm) and event-count variables (days); Mean is the default for all others.
+- **Transformation** — how the aggregated value is expressed:
+  - *None* (default for most variables) — uses the raw aggregated value.
+  - *Deviation from mean* — subtracts the long-run average, capturing anomalous conditions relative to the local baseline.
+  - *Standardised anomaly* (default for dimensionless variables) — deviation divided by the long-run standard deviation; comparable across locations and time.
+- **Variable treatment**:
+  - *Binned* (default) — converts the weather variable into quantile categories. Flexible and does not impose a functional form; recommended when the relationship may be non-linear or when you are unsure of the functional form.
+  - *Continuous* — enters the variable as a numeric term, optionally with quadratic or cubic polynomial expansions.
 
 Click **Weather Stats** to generate summary statistics and diagnostic plots for the selected weather variables.
 
@@ -39,14 +55,66 @@ Click **Weather Stats** to generate summary statistics and diagnostic plots for 
 
 Configure the regression model:
 
-- **Continuous outcomes** default to a linear regression with fixed effects.
-- **Binary outcomes** default to a logistic regression.
-- Optionally add **interaction terms**, **fixed effects**, and **control variables** (e.g. household size).
+#### Model type
 
-Run the model to generate a regression table, coefficient plot, and model fit diagnostics, including each variable's contribution to R-squared.
+- **Continuous outcomes** default to linear regression.
+- **Binary outcomes** can use linear regression (linear probability model) or logistic regression.
+
+#### Three progressive models
+
+WISE-APP fits three nested models of increasing complexity. The results tab shows all three, allowing you to assess how much explanatory power each component adds:
+
+1. **Weather only** — the raw weather-welfare relationship, without controls.
+2. **Weather + fixed effects** — adds location and time fixed effects to remove confounding from spatial and temporal heterogeneity.
+3. **Full model** — adds household, individual, area, or firm-level covariates on top of (2).
+
+#### Interactions
+
+Select up to one variable to interact with the weather terms. The default is `urban` (urban/rural) if present in the survey. Interactions identify whether the weather-welfare relationship differs across population groups — a key input for the Step 3 policy analysis.
+
+**Interaction mode**:
+
+- **Saturated** (default) — all selected moderators are crossed simultaneously: $W \times M_1 \times M_2$. Use when you want to estimate joint moderation effects.
+- **Pairwise** — each moderator is crossed with weather independently: $W \times M_1$ and $W \times M_2$. Use when moderators are conceptually independent or when the saturated model becomes too sparse.
+
+#### Fixed effects
+
+Select one or more variables to absorb as fixed effects. Defaults to survey year and admin region (`gaul1_code`) if available. Fixed effects remove unobserved heterogeneity at the selected level without estimating explicit coefficients for each category.
+
+#### Covariate selection
+
+- **User-defined** (default) — manually select control variables, organised by role: household-level, individual-level, area-level, and firm-level. Variables already used as the outcome, weather terms, interaction variable, or fixed effects are excluded automatically.
+- **LASSO** — automated stability selection using multiple imputation (default: 5 imputations) and cross-validated LASSO (10 folds). Only variables selected in more than 50% of imputation runs (the stability threshold) are retained. A standard regression is then re-fitted on the selected variables. Recommended when the covariate list is long or when you want a data-driven approach to reduce overfitting.
+
+#### Model engine
+
+For most analyses, the default engine (**fixest**) is recommended. It handles high-dimensional fixed effects efficiently and produces standard errors suitable for inference.
+
+Advanced users can switch to:
+
+- **ranger** (random forest) — non-parametric, handles non-linearities and interactions automatically; available for linear outcomes only; does not produce interpretable coefficients.
+- **xgboost** (gradient-boosted trees) — similar to ranger; available for linear and logistic outcomes.
+
+Machine learning engines are suited for predictive accuracy rather than causal inference, as their outputs cannot be directly interpreted as marginal effects.
+
+### 1.5 Interpreting Results
+
+After clicking **Run model**, results appear in three tabs:
+
+- **Predicted outcome vs weather** — partial dependence plots showing the marginal relationship between each weather variable and the outcome, holding other covariates at their observed values. When interactions are specified, separate lines are shown for each moderator group.
+- **Marginal effect of weather** — coefficient plot with confidence intervals for all three progressive models. Compare across models to assess robustness: large changes from model (1) to model (3) suggest confounding; stability across models increases confidence in the estimated weather effect.
+- **Regression results** — full coefficient table. Relative importance bars show each variable's percentage contribution to in-sample fit (R²).
+
+**Key interpretation rules:**
+
+- A weather coefficient that is significant in model (1) but shrinks toward zero in model (2) suggests the raw effect partly reflects spatial or temporal confounding absorbed by the fixed effects.
+- A significant interaction term means the weather-welfare relationship is heterogeneous — some groups are more exposed or vulnerable. This heterogeneity is what Step 3 exploits to estimate policy impacts on resilience.
+- Low overall R² does not mean weather variables are unimportant; welfare outcomes have many determinants. Focus on the significance and direction of the weather coefficients rather than overall fit.
 
 ## Tips and Common Issues
 
-- **Tip:** Use the deviation-from-mean transformation for weather variables when you want to capture the effect of anomalous conditions rather than absolute weather levels.
-- **Tip:** Check the coefficient plot to identify which weather variables have the strongest and most statistically significant relationships with welfare.
-- **Issue:** If the model fit is poor, consider refining the reference period for weather variables to better align with the economic calendar of the survey population.
+- **Tip:** Use the deviation-from-mean or standardised anomaly transformation when you want to capture anomalous conditions rather than absolute weather levels. This is particularly useful when comparing results across regions with different climates.
+- **Tip:** Check whether interaction terms are statistically significant before using them in Step 3. Non-significant interactions will produce policy effects only through the intercept, not through changes in weather sensitivity.
+- **Tip:** If using LASSO covariate selection, review the selection frequency output to understand which variables were consistently selected across imputation runs.
+- **Issue:** If model fit is poor, consider whether the reference period aligns with the economic calendar of the survey population (e.g. harvest month vs. planting month for agricultural households).
+- **Issue:** With two economies selected, ensure that variable names and survey structure are consistent across economies. Mismatched variable names will cause covariates to drop out silently.

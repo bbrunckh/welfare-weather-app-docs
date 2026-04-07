@@ -4,7 +4,7 @@ title: "Step 2: Simulate Welfare"
 
 ## Overview
 
-The Simulate Welfare step uses the model fitted in Step 1 to predict how welfare would vary under a wide range of weather conditions based on historical observations and future projections. This allows users to understand the distribution of weather-driven welfare outcomes and the probability of adverse outcomes such as high poverty rates.
+The Simulate Welfare step uses the model fitted in Step 1 to predict how welfare would vary under a wide range of weather conditions — both historical observations and future climate projections. This produces a distribution of weather-driven welfare outcomes and allows users to quantify the probability of adverse events such as high poverty rates.
 
 ## Interface
 
@@ -12,28 +12,96 @@ The Simulate Welfare step uses the model fitted in Step 1 to predict how welfare
 
 ## Instructions
 
-### 2.1 Historical Simulations
+### 2.1 Simulation Settings
 
-Using the empirical distribution of historical weather from ERA5-Land (up to 75 years), WISE-APP predicts welfare outcomes for each observed weather year. This produces a distribution of simulated consumption or poverty rates reflecting the historical range of weather variability.
-<!-- 
-### 2.2 Stochastic Catalog
+Before running simulations, configure the following settings (accessible via the settings panel):
+
+#### Historical weather period
+
+The historical period defines the weather distribution used as the baseline. The default is **1991–2020** (30 years), which aligns with the WMO standard climatological reference period and provides a stable estimate of typical weather variability. The full available range is 1950–2024. Using shorter periods increases sensitivity to recent trends; longer periods capture a broader range of natural variability.
+
+#### Projection periods
+
+Up to three future projection periods can be specified (e.g. 2025–2035, 2050–2060, 2080–2090). Only the first period is active by default (2025–2035). Each period must fall within 2015–2100.
+
+#### Residual method
+
+When predicting welfare for each simulated year, the model produces a fitted value for each household. A residual term is added to capture household-level variation not explained by weather. The residual method determines how that term is generated:
+
+- **Normal** (default) — draws residuals from a Normal distribution N(0, σ), where σ is the standard deviation of the training residuals. Recommended for most use cases; produces realistic dispersion in the simulated welfare distribution.
+- **None** — adds no residual; returns fitted values only. This understates welfare dispersion because it removes household-level variation. Useful for isolating the weather signal.
+- **Original** — re-uses each household's actual training residual across all simulated years. Preserves individual heterogeneity but is only appropriate when simulating on the same sample used for fitting.
+- **Empirical** — bootstraps residuals by resampling from the training residual distribution. A non-parametric alternative to Normal when residuals are not normally distributed.
+
+#### Ensemble output
+
+For climate scenario simulations, multiple CMIP6 model runs are available. Results can be summarised as:
+
+- **Percentiles** (default) — reports the P10, P50, and P90 across ensemble members. The percentiles are customisable. WISE-APP selects the representative ensemble member closest to each requested percentile, based on the distribution of climate change signals across variables.
+- **All members** — retains all ensemble runs, showing the full spread of model uncertainty.
+
+### 2.2 Historical Simulations
+
+WISE-APP predicts welfare outcomes for each year in the selected historical period, using the observed weather for that year. This produces a distribution of simulated welfare outcomes that reflects the range of weather variability in the historical record.
+
+<!--
+### 2.3 Stochastic Catalog
 
 To capture rare or extreme weather events that may not appear in the historical record, WISE-APP can generate a stochastic catalog of 10,000 simulated years. This is achieved by adding structured random noise to historical observations, enabling a richer characterisation of tail risks.
- -->
+-->
+
 ### 2.3 Future Climate Scenarios
 
-WISE-APP applies a **delta method** to project future welfare impacts under climate change. Historical weather data are perturbed using change fields derived from CMIP6 climate model simulations under three shared socioeconomic pathways:
+WISE-APP applies a **delta method** to project future welfare impacts under climate change. The historical weather distribution is perturbed using change fields derived from CMIP6 climate model simulations under three shared socioeconomic pathways:
 
-- **SSP 2-4.5** — Intermediate emissions scenario.
-- **SSP 3-7.0** — High emissions scenario.
-- **SSP 5-8.5** — Very high emissions scenario.
+- **SSP 2-4.5** — Intermediate emissions.
+- **SSP 3-7.0** — High emissions (default).
+- **SSP 5-8.5** — Very high emissions.
+
+All three SSPs can be run simultaneously and compared. The perturbation method is applied automatically based on variable type:
+
+- **Additive** for temperature and wind variables (°C, m/s) — the historical value is shifted by the climate change signal.
+- **Multiplicative** for accumulation variables (mm, days of rain) — the historical value is scaled by the climate change factor.
+
+Treat SSP projections as scenario-based estimates, not forecasts. The range across SSPs reflects emissions uncertainty; the range across ensemble members reflects model uncertainty.
 
 ### 2.4 Interpreting Results
 
-Results are summarised using **exceedance probability curves**, which show the annual probability that a specific poverty rate (or welfare level) will be exceeded. These curves are a standard tool for risk communication and are useful for comparing scenarios.
+#### Aggregation metric
+
+Choose how to summarise the individual-level welfare predictions into a population-level indicator. For **continuous outcomes** (consumption), available metrics include:
+
+- Mean, Median, Total (sum)
+- **Headcount ratio** — share of the population below the poverty line (requires a poverty line from Step 1)
+- **Poverty gap (P1)** — average shortfall from the poverty line as a share of the line
+- **Poverty severity (P2/FGT2)** — poverty gap weighted by the depth of poverty
+- **Gini coefficient** — inequality across the welfare distribution
+- **Prosperity gap** — average multiplier needed to reach $28/day (the World Bank prosperity standard)
+- **Average poverty (days/$)** — mean of 1/welfare; a measure of extreme deprivation
+
+For **binary outcomes** (poverty status), the default and only metric is the mean (percentage of the population classified as poor).
+
+#### Summary chart
+
+The main results chart shows the median prediction as a point, with uncertainty bands representing the P10–P90 range across ensemble members or simulated years. Each scenario (historical baseline and any SSP periods) is shown as a separate group.
+
+#### Exceedance probability curve
+
+The exceedance curve shows the probability that the chosen welfare indicator will fall below (for adverse outcomes) or exceed (for positive outcomes) a given threshold in any given year. Key readings:
+
+- **Steeper curve** — outcomes are more tightly concentrated; less year-to-year volatility from weather.
+- **Flatter curve** — outcomes are more dispersed; weather is a stronger driver of welfare variability.
+- **Leftward shift** — worse expected outcomes under the scenario compared to the baseline.
+- When comparing baseline and policy scenarios in Step 3, a **flattening of the curve** indicates improved resilience — households are less exposed to weather-driven welfare swings.
+
+#### Return period table
+
+The table shows the welfare level associated with specific return periods — e.g. the 1-in-10 year outcome is the welfare level that is expected to be reached or exceeded in 1 out of every 10 years. Return periods are provided for rare bad outcomes (1-in-5, 1-in-10, 1-in-20, 1-in-50) and rare good outcomes (4-in-5, 9-in-10, 19-in-20, 49-in-50).
 
 ## Tips and Common Issues
 
-- **Tip:** Use the stochastic catalog when the focus is on low-probability, high-impact weather events — 75 years of historical data may undersample extreme tails.
-- **Tip:** Compare exceedance curves across SSP scenarios to communicate the range of climate risk to policymakers.
-- **Issue:** Future projections are sensitive to the choice of CMIP6 models underpinning the delta fields — treat results as scenario-based estimates, not forecasts.
+- **Tip:** Start with the Normal residual method and compare results with None to understand how much of the simulated welfare dispersion comes from weather versus household-level heterogeneity.
+- **Tip:** Compare exceedance curves across SSP scenarios to communicate the range of climate risk. The spread between SSP 2-4.5 and SSP 5-8.5 reflects the value of emissions mitigation for welfare outcomes.
+- **Tip:** Use the return period table to communicate tail risks to policymakers — a "1-in-10 year poverty spike" is more intuitive than a percentile of the simulated distribution.
+- **Issue:** Future projections are sensitive to the CMIP6 models included. Treat results as scenario-based estimates, not forecasts, and always present the ensemble range rather than a single central estimate.
+- **Issue:** If the historical simulation produces an unrealistically narrow welfare distribution, check whether the residual method is set to None; switching to Normal will add appropriate household-level variation.

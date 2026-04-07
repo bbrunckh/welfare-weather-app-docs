@@ -3,10 +3,10 @@ project:
   output-dir: _book
 
 book:
-  title: "WISE-APP Docs"
-  author: "Ben Brunckhorst"
+  title: "WISE-APP docs"
+  # author: "Ben Brunckhorst"
   date: today
-  description: "WISE-APP documentation and user guide."
+  # description: "WISE-APP documentation and user guide."
   
   chapters:
     - index.qmd
@@ -31,12 +31,13 @@ format:
     toc: true
     toc-depth: 3
     number-sections: true
-    code-fold: true
+    code-fold: false
     code-tools: true
     highlight-style: github
 
 execute:
   freeze: auto
   echo: true
+  eval: false
   warning: false
   message: false

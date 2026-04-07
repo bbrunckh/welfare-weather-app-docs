@@ -2,27 +2,50 @@
 title: "Overview"
 ---
 
-## Welcome to WISE-APP
+## Welcome to WISE-APP docs
 
-WISE-APP (Weather Impact Simulation and Evaluation for Adaptation Policy and Planning) is a tool designed to estimate potential welfare outcomes under different weather conditions before events occur. It helps policymakers quantify the relationship between weather and welfare, simulate outcomes under historical and future climate scenarios, and evaluate the impact of various adaptation policies.
+**WISE-APP** (Weather Impact Simulation and Evaluation for Adaptation Policy and Planning) is a tool designed to estimate potential welfare outcomes under different weather conditions before events occur. 
 
-This user guide walks you through all key features and steps needed to use the application effectively.
+It helps policymakers quantify the relationship between weather and welfare, simulate outcomes under historical and future climate scenarios, and evaluate the impact of various adaptation policies.
 
-## How to Access WISE-APP
+This user guide walks you through all key features and steps to use WISE-APP effectively.
 
-The application is hosted on Posit Connect and can be accessed at:
+## How to access WISE-APP
 
-[**Launch WISE-APP**](https://your-posit-connect-url/wise-app)  *(update with real link)*
+[WISE-APP online](https://your-posit-connect-url/wise-app) *(update with real link)*
 
-## Guide Structure
+- This option requires World Bank single sign-on credentials. 
 
-This guide is organised into the following chapters:
+[WISE-APP R package](https://your-posit-connect-url/wise-app) *(update with real link)* 
+
+- This option requires access to a WISE-APP data directory.
+- To install and run locally:
+```{r}
+remotes::install_github("worldbank/welfare-weather-app")
+wiseapp::run_app()
+```
+
+
+## Data
+WISE-APP connects to a data directory containing household survey microdata and weather data. The data are spatially linked using the H3 spatial indexing system. For more details on the data structure and schema, see the [Data section](data.qmd).
+
+## Analysis steps
+
+After connecting to the data, WISE-APP carries out analysis in 3 steps:
+
+- **Model Welfare** — Establish the statistical relationship between weather and welfare outcomes. The fitted model is the foundation for all subsequent steps.
+- **Simulate Welfare** — Apply the fitted model to historical and future climate scenarios to produce a distribution of weather-driven welfare outcomes.
+- **Policy Scenarios** — Re-simulate welfare under counterfactual policy interventions (social protection, infrastructure, digital access, labour market) to quantify direct welfare gains and changes in climate resilience.
+
+## This guide
+
+This guide includes the following sections:
 
 - **Data** — An overview of the household survey and weather data that underpin WISE-APP, including sources, structure, and coverage.
-- **Model Welfare** — Establish the statistical relationship between weather and welfare outcomes, and identify the most vulnerable populations.
-- **Simulate Welfare** — Use the fitted model to simulate how welfare would vary across historical, stochastic, and future climate scenarios.
-- **Policy Scenarios** — Evaluate how specific adaptation policies can mitigate the impact of weather shocks and improve household resilience.
+- **Model Welfare** — Decisions, defaults, and interpretation guidance for the regression modelling step.
+- **Simulate Welfare** — How to configure and run historical and climate-scenario simulations, and how to read the results.
+- **Policy Scenarios** — How to define and interpret each type of policy intervention.
 
-## Getting Help
+## Getting help
 
 If you encounter any issues or have questions, please contact [contact name/email/team].

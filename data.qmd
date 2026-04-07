@@ -1,10 +1,35 @@
 ---
-title: "WISE-APP Data"
+title: "Data"
 ---
 
 ## Overview
 
 WISE-APP connects to a data directory on a local or remote file system. The directory contains three top-level components: **metadata**, **microdata**, and **hazard** data. Microdata and hazard data are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with the weather and events data.
+
+## Data sources
+
+The following data sources are currently included in WISE-APP:
+
+### Global Monitoring Database (GMD)
+The GMD is a harmonised collection of nationally representative household surveys from 150+ low- and middle-income countries, covering 1990–2023. It includes over 1,000 survey waves and 20 million households, with detailed welfare and demographic variables.
+
+WISE-APP uses a subset of GMD surveys that have been geocoded and timestamped to enable spatial and temporal linkage with hazard data. Individual and household-level microdata are included where available, along with a spatial lookup file.
+
+The following surveys from GMD are currently available in WISE-APP, with more to be added in future releases.:
+*Add drop down list of surveys here based on `survey_list.csv`*
+
+based on data quality, spatial coverage, and temporal alignment with hazard data. The sample includes 100+ surveys across 50+ countries, with a focus on sub-Saharan Africa.
+
+### ERA5-Land climate reanalysis
+ERA5-Land is a high-resolution global climate reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF). It provides hourly estimates of 20+ weather variables at a spatial resolution of 9 km, covering the period 1950–2024. ERA5-Land is widely used in climate impact research due to its high quality and consistency.
+
+WISE-APP uses monthly aggregates of selected ERA5-Land variables, spatially indexed by H3 cells. 
+*Add drop down with list of weather variables available*
+
+### CMIP6 climate projections
+The Coupled Model Intercomparison Project Phase 6 (CMIP6) is a coordinated effort among climate modeling centers worldwide to produce standardized climate projections under different greenhouse gas emissions scenarios. WISE-APP uses CMIP6 projections for 2015–2100 under three shared socioeconomic pathways (SSPs): SSP 2-4.5, SSP 3-7.0, and SSP 5-8.5. Multiple model runs are included to capture uncertainty in climate projections.
+
+WISE-APP applies a delta method to perturb historical weather observations using CMIP6 change fields, producing future weather scenarios that reflect both historical variability and projected climate change. The same set of weather variables is available for both historical and future simulations.
 
 ## Directory Structure
 
@@ -33,16 +58,6 @@ data/
 `{code}` is the ISO 3166-1 alpha-3 country code (e.g. `GNB`, `NGA`, `ETH`).
 
 The data directory can be stored locally or on a supported remote file system: AWS S3, Google Cloud Storage, Azure Data Lake, Hugging Face, or Databricks.
-
-## Data sources
-
-### GMD household surveys
-
-### ERA5-Land climate reanalysis
-
-### CMIP6 climate projections
-
----
 
 ## Metadata
 
@@ -96,8 +111,6 @@ One row per country–year–data level. Used to convert welfare aggregates from
 | `cpi` | numeric | Consumer price index |
 | `ppp2021` | numeric | PPP conversion factor relative to 2021 USD |
 
----
-
 ## Microdata
 
 All microdata files are in **Parquet format**, named `{code}_{year}_{survname}_{source}_{level}.parquet` and stored under `microdata/{level}/{code}/`. For example:
@@ -128,8 +141,6 @@ One row per firm. Key columns include `fid`, `revenue` (revenue per day), `emplo
 One row per H3 cell per location. This is the **spatial bridge** between microdata and all hazard data — a single H3 file covers both `_hh.parquet` and `_ind.parquet` from the same survey. Required columns are `code`, `year`, `survname`, `loc_id`, and `h3`. The optional `pop_2020` column (GHS-POP 2020 population) is used to weight hazard variables within locations when available.
 
 H3 cell indices are stored as hexadecimal strings (e.g. `8928308280fffff`) but are 64-bit integers under the hood. Cell resolution is not fixed — merges are performed across resolutions using H3 parent/child relationships.
-
----
 
 ## Hazard Data
 
@@ -163,8 +174,6 @@ The historical scenario covers 1950–2014 and the SSP scenarios cover 2015–21
 > **Under development — not yet implemented in WISE-APP.**
 
 Historical and probabilistic event data (e.g. floods, cyclones) are planned for a future release. Historical event files will contain one row per H3 cell per discrete event; probabilistic files will contain one row per H3 cell per return period.
-
----
 
 ## Spatial Integration: H3
 

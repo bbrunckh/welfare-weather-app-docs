@@ -48,5 +48,10 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 
+# Quarto files
 /.quarto/
 _book/
+_freeze/
+
+# Claude local settings
+.claude/settings.local.json

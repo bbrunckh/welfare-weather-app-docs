@@ -2,49 +2,58 @@
 title: "Overview"
 ---
 
+::: {.callout-important appearance="simple"}
+### Under Construction. Please check back soon for the latest version.
+:::
+
 ## Welcome to WISE-APP docs
 
 **WISE-APP** (Weather Impact Simulation and Evaluation for Adaptation Policy and Planning) is a tool designed to estimate potential welfare outcomes under different weather conditions before events occur. 
 
-It helps policymakers quantify the relationship between weather and welfare, simulate outcomes under historical and future climate scenarios, and evaluate the impact of various adaptation policies.
+It quantifies the relationship between weather and welfare, simulates outcomes under historical and future climate scenarios, and evaluates the impact of various adaptation policies.
 
 This user guide walks you through all key features and steps to use WISE-APP effectively.
 
 ## How to access WISE-APP
 
-[WISE-APP online](https://your-posit-connect-url/wise-app) *(update with real link)*
+[WISE-APP online](https://datanalytics-int.worldbank.org/content/5163b09e-1eb3-47e6-bb6a-4f0abcf7a28f) *DEV version*
 
 - This option requires World Bank single sign-on credentials. 
 
-[WISE-APP R package](https://your-posit-connect-url/wise-app) *(update with real link)* 
 
-- This option requires access to a WISE-APP data directory.
+
+[WISE-APP R package](https://github.com/worldbank/welfare-weather-app) *DEV version*
+
+- This option requires R and access to WISE-APP data.
 - To install and run locally:
+
 ```{r}
 remotes::install_github("worldbank/welfare-weather-app")
 wiseapp::run_app()
 ```
-
-
-## Data
-WISE-APP connects to a data directory containing household survey microdata and weather data. The data are spatially linked using the H3 spatial indexing system. For more details on the data structure and schema, see the [Data section](data.qmd).
-
-## Analysis steps
-
-After connecting to the data, WISE-APP carries out analysis in 3 steps:
-
-- **Model Welfare** — Establish the statistical relationship between weather and welfare outcomes. The fitted model is the foundation for all subsequent steps.
-- **Simulate Welfare** — Apply the fitted model to historical and future climate scenarios to produce a distribution of weather-driven welfare outcomes.
-- **Policy Scenarios** — Re-simulate welfare under counterfactual policy interventions (social protection, infrastructure, digital access, labour market) to quantify direct welfare gains and changes in climate resilience.
 
 ## This guide
 
 This guide includes the following sections:
 
 - **Data** — An overview of the household survey and weather data that underpin WISE-APP, including sources, structure, and coverage.
-- **Model Welfare** — Decisions, defaults, and interpretation guidance for the regression modelling step.
+- **Model Welfare** — Decisions, defaults, and interpretation guidance for the modelling step.
 - **Simulate Welfare** — How to configure and run historical and climate-scenario simulations, and how to read the results.
 - **Policy Scenarios** — How to define and interpret each type of policy intervention.
+
+## Data
+
+WISE-APP connects to a data directory containing household survey microdata and weather data. The data are spatially linked using the H3 indexing system. For more details on the data sources, structure, aand coverage, see the [Data section](data.qmd) of this guide.
+
+- [This repository](https://github.com/worldbank/welfare-weather-app-data) contains the code used to prepare specific data sources for WISE-APP.
+
+## Analysis
+
+After connecting to the data, WISE-APP performs analysis in 3 steps:
+
+- **Model Welfare** — Establish the statistical relationship between weather and outcomes of interest. The fitted model is the foundation for all subsequent steps.
+- **Simulate Welfare** — Apply the fitted model to historical and future climate scenarios to produce a distribution of weather-driven outcomes.
+- **Policy Scenarios** — Re-simulate outcomes under counterfactual policy interventions (social protection, infrastructure, digital access, labour market) to quantify direct welfare gains and changes in climate resilience.
 
 ## Getting help
 

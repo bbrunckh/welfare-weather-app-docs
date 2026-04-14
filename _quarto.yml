@@ -22,7 +22,7 @@ book:
   navbar:
     right:
       - icon: github
-        href: https://github.com/your-org/wise-app  # update or remove
+        href: https://github.com/worldbank/welfare-weather-app-docs  # update or remove
 
 format:
   html:
@@ -37,7 +37,7 @@ format:
 
 execute:
   freeze: auto
-  echo: true
   eval: false
+  echo: true
   warning: false
   message: false

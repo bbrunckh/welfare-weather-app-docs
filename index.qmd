@@ -16,13 +16,12 @@ This user guide walks you through all key features and steps to use WISE-APP eff
 
 ## How to access WISE-APP
 
-[WISE-APP online](https://datanalytics-int.worldbank.org/content/5163b09e-1eb3-47e6-bb6a-4f0abcf7a28f) *DEV version*
+[WISE-APP online](https://datanalytics-int.worldbank.org/content/5163b09e-1eb3-47e6-bb6a-4f0abcf7a28f){target="_blank"} [Under development]{style="color: red;"}
 
 - This option requires World Bank single sign-on credentials. 
 
 
-
-[WISE-APP R package](https://github.com/worldbank/welfare-weather-app) *DEV version*
+[WISE-APP R package](https://github.com/worldbank/welfare-weather-app){target="_blank"} [Under development]{style="color: red;"}
 
 - This option requires R and access to WISE-APP data.
 - To install and run locally:

@@ -26,12 +26,12 @@ Up to three future projection periods can be specified (e.g. 2025–2035, 2050�
 
 #### Residual method
 
-When predicting welfare for each simulated year, the model produces a fitted value for each household. A residual term is added to capture household-level variation not explained by weather. The residual method determines how that term is generated:
+When predicting welfare for each simulated year, the model produces a fitted value for each household based on that year's weather conditions. A residual term is added to capture household-level variation not explained by weather — reflecting differences in skills, assets, social connections, and other factors the model does not observe. The residual method determines how that term is generated:
 
-- **Normal** (default) — draws residuals from a Normal distribution N(0, σ), where σ is the standard deviation of the training residuals. Recommended for most use cases; produces realistic dispersion in the simulated welfare distribution.
-- **None** — adds no residual; returns fitted values only. This understates welfare dispersion because it removes household-level variation. Useful for isolating the weather signal.
-- **Original** — re-uses each household's actual training residual across all simulated years. Preserves individual heterogeneity but is only appropriate when simulating on the same sample used for fitting.
-- **Empirical** — bootstraps residuals by resampling from the training residual distribution. A non-parametric alternative to Normal when residuals are not normally distributed.
+- **Original** (default) — each household is assigned its own residual from the model estimation in Step 1. This preserves individual-level heterogeneity: households that were above or below their model-predicted welfare level in the survey remain above or below it in every simulated year. Recommended for most analyses, particularly when the goal is to assess weather-driven changes in population welfare rather than statistical uncertainty in individual predictions.
+- **Normal** — draws residuals from a normal distribution with mean zero and standard deviation equal to that of the training residuals. Appropriate when the residuals are approximately normally distributed and you want the simulated welfare distribution to reflect statistical sampling variation in household-level outcomes.
+- **Empirical** — bootstraps residuals by resampling from the training residual distribution. A non-parametric alternative to Normal when residuals are skewed or non-normal.
+- **None** — adds no residual; returns fitted values only. This understates welfare dispersion because it removes household-level variation. Useful for isolating the weather signal or for diagnostic purposes.
 
 #### Ensemble output
 
@@ -100,8 +100,49 @@ The table shows the welfare level associated with specific return periods — e.
 
 ## Tips and Common Issues
 
-- **Tip:** Start with the Normal residual method and compare results with None to understand how much of the simulated welfare dispersion comes from weather versus household-level heterogeneity.
 - **Tip:** Compare exceedance curves across SSP scenarios to communicate the range of climate risk. The spread between SSP 2-4.5 and SSP 5-8.5 reflects the value of emissions mitigation for welfare outcomes.
 - **Tip:** Use the return period table to communicate tail risks to policymakers — a "1-in-10 year poverty spike" is more intuitive than a percentile of the simulated distribution.
 - **Issue:** Future projections are sensitive to the CMIP6 models included. Treat results as scenario-based estimates, not forecasts, and always present the ensemble range rather than a single central estimate.
-- **Issue:** If the historical simulation produces an unrealistically narrow welfare distribution, check whether the residual method is set to None; switching to Normal will add appropriate household-level variation.
+- **Issue:** If the historical simulation produces an unrealistically narrow welfare distribution, check whether the residual method is set to None; switching to Original or Normal will add appropriate household-level variation.
+
+## Understanding Uncertainty Bands {#understanding-uncertainty}
+
+WISE-APP reports simulated welfare outcomes with uncertainty bands that reflect multiple distinct sources of uncertainty. Understanding what each band represents helps you interpret results correctly and communicate them to stakeholders.
+
+### Sources of Uncertainty
+
+WISE-APP recognises four sources of uncertainty and reports them separately.
+
+**Coefficient uncertainty** arises because the regression coefficients estimated in Step 1 are statistical estimates, not exact values. Different samples from the same population would produce slightly different coefficients, and those differences translate into variation in simulated welfare outcomes. WISE-APP propagates this uncertainty analytically — without running repeated simulations — using a delta method that approximates how estimation error in the coefficients affects aggregate welfare statistics.
+
+By default, the coefficient uncertainty band reflects only the weather-related coefficients (weather variables and their interactions with other covariates). Coefficients on other covariates that are held fixed in the simulation — education, household size, and similar variables — do not contribute to the band, because their uncertainty cancels out when comparing scenarios that hold those covariates unchanged. You can expand the band to include all coefficients using the "Include uncertainty on all covariates" toggle.
+
+**Residual uncertainty** reflects household-level variation not explained by the weather model. Under the **Original** residual method (the default), each household's residual is treated as fixed, so this source does not contribute to the uncertainty band — it shifts the welfare level but does not widen the band. Under **Normal** or **Empirical** residual methods, residual variation is stochastic and widens the band to reflect household-level sampling uncertainty.
+
+**Inter-annual weather variability** reflects the fact that weather differs year to year within the selected period. WISE-APP runs the simulation for every year in the historical period (or climate projection window) and reports the year-to-year spread in welfare outcomes. Wider spread means weather is a stronger driver of year-to-year welfare variation in the selected economy.
+
+**Inter-model spread** (climate scenarios only) reflects uncertainty in how much the climate will change. Each CMIP6 model projects a slightly different future climate. Running the simulation for each model member produces a range of projected welfare outcomes. For climate scenarios, this is typically the dominant source of uncertainty — the spread across GCM models usually exceeds both the coefficient uncertainty and the inter-annual variability.
+
+### Reading the Uncertainty Bands
+
+The Summary chart and Exceedance Probability curve display nested uncertainty bands:
+
+- **Inner band** — coefficient uncertainty: uncertainty from imprecision in the Step 1 weather-related regression coefficients. Typically narrow relative to the other sources.
+- **Middle range** — inter-annual variability: the empirical spread of annual welfare outcomes across the simulated period, shown as percentile bands (P10–P90 by default).
+- **Outer band** — inter-model spread: for climate scenarios, the empirical spread across CMIP6 ensemble members. For historical simulations (single weather record), this band collapses to a point.
+- **Pooled whisker** — an analytic combination of coefficient uncertainty and inter-model spread. Shown only for climate scenarios with multiple ensemble members; suppressed for historical simulations where inter-model spread is absent.
+
+When all four sources are present, the outer bands are substantially wider than the inner band. For historical simulations, inter-annual variability is usually the dominant visible source.
+
+### What Uncertainty Bands Do *Not* Capture
+
+The bands represent parametric statistical uncertainty given the chosen model and data. They do not reflect:
+
+- **Model misspecification** — if the functional form of the weather-welfare relationship is wrong, the coefficients may be biased in ways that confidence intervals cannot detect.
+- **Future changes in household characteristics** — climate projections are applied to the baseline survey population. The simulation does not account for future economic growth, urbanisation, or structural change in the economy.
+- **Poverty line uncertainty** — the poverty line is treated as a known quantity.
+- **Emissions pathway uncertainty** — the choice of SSP is a scenario assumption, not a probability. The spread across SSPs reflects the consequences of different emissions trajectories, not a probability distribution over future emissions.
+
+### Technical Note: The Delta Method
+
+The uncertainty bands are computed analytically using the delta method — a first-order Taylor approximation that propagates coefficient variance through the aggregate welfare statistic. This is computationally efficient (no Monte Carlo simulation is required) and exact for linear statistics. For non-linear statistics — the poverty headcount ratio, Gini coefficient, median — the approximation is accurate when coefficient uncertainty is small relative to the curvature of the statistic, which is typical under WISE-APP's standard sample sizes. A kernel smoothing step regularises the headcount ratio gradient near the poverty line. The delta method computes the standard error of a population aggregate (e.g. mean welfare, headcount rate) rather than the prediction interval for an individual household.

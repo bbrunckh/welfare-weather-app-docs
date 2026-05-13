@@ -57,8 +57,10 @@ Configure the regression model:
 
 #### Model type
 
-- **Continuous outcomes** default to linear regression.
-- **Binary outcomes** can use linear regression (linear probability model) or logistic regression.
+- **Continuous outcomes** — choose between:
+  - **Linear regression** (default) — estimates the effect of weather on the *average* welfare outcome. A single coefficient per weather variable summarises the relationship across the entire welfare distribution.
+  - **Distributional regression (RIF)** — estimates the effect of weather on specific *quantiles* of the welfare distribution (10th through 90th percentile). Recommended when you want to assess whether weather impacts are concentrated among the poor, or when Step 3 will evaluate social protection or cash transfer programmes. See the [Statistical Methods](#statistical-methods) section for details.
+- **Binary outcomes** — choose between linear regression (a linear probability model) or logistic regression. Logistic regression coefficients are log-odds ratios; linear probability model coefficients are marginal effects on the probability of the binary outcome.
 
 #### Three progressive models
 
@@ -86,14 +88,14 @@ Select one or more variables to absorb as fixed effects. Defaults to survey year
 - **User-defined** (default) — manually select control variables, organised by role: household-level, individual-level, area-level, and firm-level. Variables already used as the outcome, weather terms, interaction variable, or fixed effects are excluded automatically.
 - **LASSO** — automated stability selection using multiple imputation (default: 5 imputations) and cross-validated LASSO (10 folds). Only variables selected in more than 50% of imputation runs (the stability threshold) are retained. A standard regression is then re-fitted on the selected variables. Recommended when the covariate list is long or when you want a data-driven approach to reduce overfitting.
 
-#### Model engine
+#### Regression engine
 
-For most analyses, the default engine (**fixest**) is recommended. It handles high-dimensional fixed effects efficiently and produces standard errors suitable for inference.
+Linear regression and distributional regression (RIF) are both estimated using a high-dimensional fixed effects estimator that handles large numbers of fixed effect categories — thousands of locations or survey waves — without expanding them into explicit dummy variables. Standard errors are cluster-robust at the location level by default.
 
-Advanced users can switch to:
+Advanced users can switch to non-parametric engines:
 
-- **ranger** (random forest) — non-parametric, handles non-linearities and interactions automatically; available for linear outcomes only; does not produce interpretable coefficients.
-- **xgboost** (gradient-boosted trees) — similar to ranger; available for linear and logistic outcomes.
+- **Random forest** — non-parametric, handles non-linearities and interactions automatically; available for continuous outcomes only; does not produce interpretable coefficients.
+- **Gradient-boosted trees** — similar to random forest; available for continuous and binary outcomes.
 
 Machine learning engines are suited for predictive accuracy rather than causal inference, as their outputs cannot be directly interpreted as marginal effects.
 
@@ -118,3 +120,58 @@ After clicking **Run model**, results appear in three tabs:
 - **Tip:** If using LASSO covariate selection, review the selection frequency output to understand which variables were consistently selected across imputation runs.
 - **Issue:** If model fit is poor, consider whether the reference period aligns with the economic calendar of the survey population (e.g. harvest month vs. planting month for agricultural households).
 - **Issue:** With two economies selected, ensure that variable names and survey structure are consistent across economies. Mismatched variable names will cause covariates to drop out silently.
+
+## Statistical Methods {#statistical-methods}
+
+This section provides technical background on the regression methods available in Step 1. Users primarily interested in the workflow can skip ahead to Step 2; users who want to understand what the model estimates and how to interpret coefficients correctly will find this section useful.
+
+### Linear Regression
+
+Linear regression with fixed effects estimates the effect of weather on the *average* welfare outcome, controlling for observed and unobserved heterogeneity.
+
+**What the coefficients mean.** A coefficient of −0.05 on a weather variable in a log-welfare model means a one-unit increase in that variable is associated with approximately a 5% reduction in expected welfare. This is an *average* effect across all households in the sample — it does not distinguish between impacts on poor and wealthy households unless interaction terms are explicitly specified.
+
+**Fixed effects.** The model can absorb large numbers of fixed effects — for example, a separate intercept for each survey location and each survey year — without estimating them as explicit coefficients. They are instead removed through within-group demeaning before estimation. The practical consequence is that the weather coefficient is identified from *within-group* variation: how does welfare in a given location change from year to year as weather varies, after removing permanent location-level differences in average wealth? This eliminates confounding from structural differences across regions.
+
+**The three progressive models** reveal how much of the apparent weather-welfare relationship reflects genuine effects versus confounding:
+
+1. **Model 1** estimates a raw correlation between weather and welfare that may be inflated because poor regions also tend to have more extreme weather.
+2. **Model 2** adds fixed effects, removing cross-sectional confounding. A large reduction in the weather coefficient from Model 1 to Model 2 signals that confounding was important.
+3. **Model 3** further controls for observable household and area characteristics. Substantial change in the coefficient from Model 2 to Model 3 indicates that some of the apparent weather effect in Model 2 was mediated through or confounded with these observables.
+
+**Limitations.** Linear regression estimates a single average effect. If weather harms poor households more than wealthy ones — which is a central concern for climate adaptation — this heterogeneity is invisible to the model unless captured through explicit interaction terms. The estimates are also sensitive to extreme welfare observations at the tails of the distribution.
+
+### Distributional Regression (RIF)
+
+Distributional regression uses a Recentered Influence Function (RIF) to estimate the effect of weather on specific *quantiles* of the unconditional welfare distribution. Rather than asking "how does average welfare change with weather?", it asks "how does the 20th percentile of the overall welfare distribution change with weather?"
+
+**What the coefficients mean.** RIF regression produces a separate coefficient for each quantile (τ = 0.1, 0.2, …, 0.9). The coefficient at τ = 0.2 answers: "For a small increase in average exposure to this weather variable across the population, how does the 20th percentile of the welfare distribution shift?" Coefficients that are more negative at low quantiles than at high quantiles indicate that weather shocks hit the poor harder — a direct measure of distributional vulnerability.
+
+**Coefficient curves across quantiles.** Results show a coefficient curve across quantiles rather than a single number. A downward-sloping curve (more negative at low τ) signals disproportionate harm to the poor. A flat curve suggests uniform impacts. A curve that crosses zero indicates beneficial weather effects for some parts of the distribution and harmful effects for others.
+
+**Why this matters for policy.** When weather sensitivity varies across the welfare distribution, any policy that raises a household's welfare also changes its weather vulnerability — by repositioning it in the distribution. A cash transfer that lifts a household from the 10th to the 25th percentile moves it to a less weather-vulnerable part of the distribution. Distributional regression captures this *repositioning* effect, which the Step 3 policy analysis uses to measure the full resilience benefit of social protection programmes. See the Step 3 documentation for details.
+
+**Limitations.** The quantile grid covers τ = 0.1 to τ = 0.9. Households in the bottom or top 10% of the distribution fall outside the estimated range and are assigned to the nearest boundary quantile for simulation purposes. Predictions at the extremes should therefore be treated with caution. Each quantile regression is also estimated independently, so predicted quantiles are not guaranteed to be monotonically ordered in all counterfactual scenarios, though this is uncommon in practice.
+
+### Choosing Between Linear and RIF Regression
+
+| | Linear regression | Distributional regression (RIF) |
+|---|---|---|
+| **Estimates** | Average (mean) welfare effect | Quantile-specific effects (τ = 0.1 to 0.9) |
+| **Coefficients** | One per weather variable | A curve of 9 estimates per weather variable |
+| **Distributional heterogeneity** | Only through interaction terms | Directly estimated |
+| **Cash transfer resilience (Step 3)** | Only if cash×weather interaction specified | Captured via repositioning |
+| **Recommended for** | Average impact analysis, binary outcomes | Distributional analysis, social protection evaluation |
+
+Start with linear regression to establish the average relationship. Switch to RIF when you want to assess whether poor households are disproportionately affected, or when Step 3 will include cash transfer or social protection scenarios where the repositioning channel matters.
+
+### Interaction Terms and Weather Sensitivity
+
+Interaction terms test whether the weather-welfare relationship differs across groups. An interaction between temperature and electricity access, for example, tests whether electrified households have lower temperature sensitivity. A negative and significant interaction coefficient means electricity access buffers the welfare effects of heat stress.
+
+Interactions are the primary mechanism through which infrastructure, digital, and labour market policies produce resilience effects in Step 3. If temperature is interacted with electricity access in Step 1, the Step 3 scenario of increasing electricity access will simultaneously:
+
+1. Raise average welfare through the direct electricity coefficient.
+2. Reduce temperature sensitivity for newly electrified households, through the interaction coefficient.
+
+Check whether interaction terms are statistically significant before relying on them for policy resilience analysis. Non-significant interactions will produce policy effects only through the main effect, not through weather sensitivity.

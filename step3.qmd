@@ -112,3 +112,57 @@ Infrastructure, digital inclusion, and labour market scenario results are availa
 - **Tip:** Run multiple policies individually before combining them. This allows you to attribute the combined effect to its components.
 - **Issue:** If a policy produces no change in weather sensitivity, check whether the modified variable was included as an interaction term in Step 1. Variables that only enter the model as main-effect covariates will shift the welfare level but not the slope of the exceedance curve.
 - **Issue:** Policy effects are conditional on the Step 1 model specification. Policies that target variables not present in the survey data, or not selected as covariates, will have no effect in the simulation.
+
+## Policy Effects: Decomposition into Channels {#policy-decomposition}
+
+WISE-APP decomposes the total effect of a policy intervention into two channels: the **main effect** (direct welfare change) and the **resilience effect** (change in weather sensitivity). Understanding this decomposition helps distinguish policies that raise welfare levels from those that reduce vulnerability to weather variability — and from those that do both.
+
+### Main Effect
+
+The main effect captures the direct welfare change attributable to the policy, holding weather conditions constant. It has two components:
+
+1. **Cash transfer effect** — for social protection programmes, the direct income boost to eligible households. The transfer raises welfare regardless of weather conditions.
+
+2. **Covariate shift effect** — for infrastructure, digital, and labour market policies, the welfare change associated with the modified covariate itself. For example, gaining access to electricity is associated with higher welfare, as captured by the electricity coefficient in the Step 1 model. This represents the average welfare gain from the policy at observed weather conditions.
+
+The main effect shifts the welfare exceedance curve upward (or, for poverty indicators, leftward) — it raises welfare outcomes regardless of what the weather is doing in a given year.
+
+### Resilience Effect
+
+The resilience effect captures how the policy changes the *relationship* between weather and welfare. A policy with a positive resilience effect makes welfare less responsive to weather shocks — it flattens the exceedance curve rather than simply shifting it.
+
+The resilience effect has two sub-channels:
+
+**Interaction channel.** When the policy changes a covariate that also appears in a weather × covariate interaction in the Step 1 model, the policy changes the effective weather coefficient for affected households. For example, if temperature is interacted with electricity access in Step 1, then increasing electricity access reduces the temperature coefficient for newly electrified households — they become less sensitive to heat stress. This channel is present for both linear and distributional regression engines.
+
+**Repositioning channel** (distributional regression only). This channel is unique to the RIF regression engine. When the welfare distribution has heterogeneous weather sensitivity — poor households are more vulnerable to weather than wealthy ones — any policy that raises a household's welfare also changes its position in the distribution and, with it, its weather vulnerability. A cash transfer that lifts a household from the 10th to the 25th percentile moves it to a part of the distribution with lower weather sensitivity, even without changing any observable household characteristic. This indirect resilience effect of income support is captured automatically when distributional regression is used in Step 1. It is not present in linear regression results.
+
+### The Decomposition Tab
+
+The Decomposition tab reports, for each household or welfare decile:
+
+- **Main effect** — direct welfare change, broken down into cash transfer and covariate shift components.
+- **Resilience effect** — change in weather sensitivity, broken down into interaction and repositioning components.
+- **Total effect** — the sum of main and resilience effects.
+
+Effects are reported both in welfare units and as percentage changes. The channel totals reconcile with the exceedance curve results in the Results tab.
+
+::: {.callout-note}
+## How the regression engine affects policy results
+
+The choice of regression engine in Step 1 has important consequences for policy analysis in Step 3:
+
+**Linear regression** can only produce a resilience effect through the interaction channel. The modified covariate must appear in an interaction with a weather variable in the Step 1 specification. Cash transfers that raise income have no resilience effect in a linear model unless a cash × weather interaction is explicitly included — which is uncommon. As a result, the resilience effects of social protection programmes tend to be understated.
+
+**Distributional regression (RIF)** captures resilience through both the interaction channel and the repositioning channel. Cash transfers automatically build resilience by shifting poor households to less weather-vulnerable parts of the welfare distribution, even without any interaction term. This is the more complete measure of total resilience, particularly for poverty-focused analyses.
+
+When comparing policy effects across engine choices, expect the RIF engine to show larger total resilience effects, especially for cash transfer and social protection programmes.
+:::
+
+### Limitations
+
+**Model-conditional effects.** All policy effects are conditional on the Step 1 model. A policy that targets a covariate not included in the model — or included as a main effect without an interaction — will produce only a main effect, even if the true policy also reduces weather sensitivity.
+
+**No general equilibrium.** The simulation modifies household-level characteristics but treats the broader economic environment (prices, wages, labour demand) as fixed. Policies with economy-wide effects may be under- or overstated.
+
+**Extrapolation from the training data.** The policy simulation applies Step 1 coefficients to a modified survey. If the policy moves households to covariate values rarely or never observed in the training data (for example, near-universal electrification in a survey with low baseline access), the coefficients estimated from the observed data may not accurately represent welfare outcomes in that counterfactual regime.

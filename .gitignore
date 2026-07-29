@@ -57,3 +57,4 @@ _book/
 
 # Posit local settings
 .posit/
+**/*.quarto_ipynb

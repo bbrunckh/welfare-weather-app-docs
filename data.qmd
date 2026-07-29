@@ -1,12 +1,62 @@
 ---
 title: "Data"
 ---
-
 ## Overview
 
-WISE-APP connects to a data directory on a local or remote file system. The directory contains three top-level components: **metadata**, **microdata**, and **hazard** data. Microdata and hazard data are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with the weather and events data.
+WISE-APP connects to a data directory on a local or remote file system. The directory contains three top-level components: **metadata**, **microdata**, and **hazard** (historical weather and future climate estimates) data. Microdata and hazard data are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with the weather and events data.
+
+## Background & Analytical Caveats
+
+The WISE-APP tool uses household survey microdata, historical weather data, and climate projections to estimate the impact of weather on welfare outcomes, all merged at the appropriate interval using the H3 spatial indexing system. This section describes the data sources, file structure and organization, and linking process which underpins the WISE-APP tool. 
+
+### Household Survey Microdata (GMD)
+
+ The quality of results of the WISE-APP is highly dependent on the quality of input data. The household survey microdata, drawn from the Global Monitoring Database (GMD), are of high-quality and widely used. Nevertheless, one should note that:
+
+1.  Beyond basic the demographic information and consumption variables, the availability of other variables (education, health, shelter, durables, etc.) varies widely across surveys and countries, and may frequently be not collected entirely or missing for large shares of households. In the Step 1 modeling process, if one defaults to the LASSO variable selection approach, the WISE-APP will only use variables with at least 80% coverage across households in each survey. Careful descriptive analysis of survey microdata is recommended to ensure that variables of interest are sufficiently available and not systematically missing for certain sub-populations.
+
+2. The household survey itself may not fully cover the country pending access issues or other restrictions. One should be careful to analyze the coverage of the survey data to be sure that any gaps are acknowledged in resulting analysis.
+
+3. [The household survey data are collected typically using a complex survey sampling design. While the WISE-APP tool does incorporate survey weights in the process for reporting results (and are as such unbiased in respect to representing the sampling frame), GMD data does not harmonize the full reporting of survey design information (e.g. strata, clusters, etc.) which enable proper variance estimation for results. Thus, the WISE-APP tool does not currently incorporate survey design information in the modeling process, and as such, the standard errors of the estimates may be underestimated. Importantly, the use of spatial fixed effects may somewhat mitigate this concern. Nevertheless, users should be aware of this limitation when interpreting results.]{.mark}
+
+4. As both the timing and location of the survey data is critical for matching to weather data and the broader WISE-APP methodology process, one should look carefully at the specificity of the survey data. Surveys can be collected only part of the year, which affects the variation of weather data used and impacts the WISE-APP modeling process. Additionally, [survey data may be censored to aid anonymity, such as reporting only the quarter of the interview date, or reporting only the region or province of the household location. **This specificity should be analyzed carefully prior to analysis, as it can have a major impact on findings.** Matching with weather data at the governorate level to the nearest quarter will be much less precise, and be much less likely to find statistically significant or indeed relevant impacts of weather on welfare outcomes using the WISE-APP tool.]{.mark}
+
+### Historical Weather Data (ERA5-Land)
+
+ERA5-Land is a high-resolution global climate reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF). It provides hourly estimates of 20+ weather variables at a spatial resolution of 9 km, covering the period 1950–2024. ERA5-Land is widely used in climate impact research due to its high quality and consistency. 
+
+While a re-analysis dataset is not a perfect representation of local conditions, it is the best available data for historical weather conditions, based on observational data and geophysical modeling to develop a consistent dataset.
+
+[For the WISE-APP tool, ERA5-Land data are aggregated to monthly resolution and spatially indexed using the H3 indexing system (to be described below). This monthly temporal resolution is important to note for the WISE-APP modeling process, as it shapes the modeling and interpretation decisions. Nevertheless, this monthly resolution can be somewhat flexible, as one can consider the number of days in a month that exceeded a temperature threshold, etc.]{.mark}
+
+Analytical Caveats:
+
+1. When building a model using the WISE-APP tool, one should look at the extent to which historical weather was successfully merged with household data, as matching issues may occur which cause only a subset to be used and bias results.
+
+2. One should also look at the variation in the weather data merged with the household data that will be used in modeling. [Some variation is essential for a regression model to be able to identify the impact of weather on welfare outcomes, and spatial and temporal variation as well to distinguish the impact of weather distinct from temporal and locational fixed effects.]{.mark} 
+
+
+### Climate Projections (CMIP6 SSP Scenarios)
+
+The Coupled Model Intercomparison Project Phase 6 (CMIP6) is a coordinated effort among climate modeling centers worldwide to produce standardized climate projections under different greenhouse gas emissions scenarios. WISE-APP uses CMIP6 projections for 2015–2100 under three shared socioeconomic pathways (SSPs): SSP 2-4.5, SSP 3-7.0, and SSP 5-8.5. Multiple model runs are included to capture uncertainty in climate projections.
+
+The WISE-APP tool used the standard delta method to perturb historical weather observations using CMIP6 change fields, producing future weather scenarios that reflect both historical variability and projected climate change. By doing this for each individual model within the ensemble SSP forecast, the tool also captures this model uncertainty in climate projections. The same set of weather variables is available for both historical and future simulations.
+
+The delta-method applied here adjusts the mean of the historical weather data to reflect the projected change in climate, while preserving the historical variability. This is a standard approach in climate impact analysis, however, one may consider that climate change could affect the variance of weather as well. This is currently not implemented, but could be considered in future updates.
+
+[The CMIP6 climate projects are based on a monthly(?) temporal resolution and X km(??) spatial level, which is then indexed and merged using the the H3 indexing system.]{.mark} 
+
+
+### H3 Spatial Indexing System
+
+Microdata and hazard data are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with the weather and events data.
+
+For analysis for the WISE-APP process, much depends on the spatial granularity of the survey data, and how it is matched to historical and future weather through the H3 indexing system. As stated in the earlier caveat, one should analyze carefuly the extend to which weather data successfully merged with household data throught the H3 indexing process, as the completeness of this process (and the spatial granularity used) will majorly impact the results of the WISE-APP modeling process.
+
 
 ## Data sources
+
+[NOTE: Perhaps data sources section should be depreciated or just kept to for the list components?]{.mark}
 
 The following data sources are currently included in WISE-APP:
 
@@ -18,7 +68,6 @@ WISE-APP uses a subset of GMD surveys that have been geocoded and timestamped to
 The following surveys from GMD are currently available in WISE-APP, with more to be added in future releases.:
 *Add drop down list of surveys here based on `survey_list.csv`*
 
-based on data quality, spatial coverage, and temporal alignment with hazard data. The sample includes 100+ surveys across 50+ countries, with a focus on sub-Saharan Africa.
 
 ### ERA5-Land climate reanalysis
 ERA5-Land is a high-resolution global climate reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF). It provides hourly estimates of 20+ weather variables at a spatial resolution of 9 km, covering the period 1950–2024. ERA5-Land is widely used in climate impact research due to its high quality and consistency.

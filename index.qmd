@@ -14,6 +14,15 @@ It quantifies the relationship between weather and welfare, simulates outcomes u
 
 This user guide walks you through all key features and steps to use WISE-APP effectively.
 
+## Analytical Caveat
+
+[While grounded in best-practice empirical research and advanced statistical methods, the results of the WISE-APP tool are **indicative** and based on a model which estimates the impact of direct, localized, and high-frequency weather variability on an outcome of interest (typically household welfare). 
+
+This model **does not** predict extreme tail-risk events, or estimate indirect-impacts of weather through broader non-locally defined associations (such as national or regional markets, or hydrology, etc.). Furthermore, it is highly dependent on the quality and granualarity of the underlying data, and the assumptions made in the modelling process. 
+
+Through this document, methodological caveats and limitations are highlighted, so as to enable users to make informed choices for how to interpret results.]{.mark}
+
+
 ## How to access WISE-APP
 
 [WISE-APP online](https://datanalytics-int.worldbank.org/content/5163b09e-1eb3-47e6-bb6a-4f0abcf7a28f){target="_blank"} [Under development]{style="color: red;"}
@@ -56,4 +65,4 @@ After connecting to the data, WISE-APP performs analysis in 3 steps:
 
 ## Getting help
 
-If you encounter any issues or have questions, please contact [contact name/email/team].
+If you encounter any issues or have questions, please contact [contact: name/email/team].

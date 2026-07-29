@@ -9,14 +9,20 @@ This is a **Quarto book** project documenting WISE-APP (Weather Impact Simulatio
 ## Commands
 
 ```bash
+# Load quarto library
+library(quarto)
+
 # Preview the book locally with live reload
-quarto preview
+quarto_preview()
+
+# To stop preview
+quarto_preview_stop()
 
 # Build the book to _book/ (HTML output)
-quarto render
+quarto_render()
 
 # Render a single chapter
-quarto render data.qmd
+quarto_render("data.qmd")
 ```
 
 The `_book/` directory is gitignored build output; `.quarto/` is the build cache.

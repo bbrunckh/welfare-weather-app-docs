@@ -4,7 +4,44 @@ title: "Step 2: Simulate Welfare"
 
 ## Overview
 
-The Simulate Welfare step uses the model fitted in Step 1 to predict how welfare would vary under a wide range of weather conditions — both historical observations and future climate projections. This produces a distribution of weather-driven welfare outcomes and allows users to quantify the probability of adverse events such as high poverty rates.
+The Simulate Welfare step uses the model fitted in Step 1 to predict how welfare would vary under a range of weather conditions. It is this *range* of weather conditions which is critical for establishing both typical variation in welfare due to weather, and to simulate how a differing weather conditions could impact this. This variation in weather comes in two parts: a historical weather distribution, and a future climate projection. Given the considerably diverse sources of uncertainty from the model definition process in Step One, and the simulations conducted here in Step Two, several settings, results visualizations, and diagnostic plots are presented to aid in the interpretation of this heterogenous uncertainty. 
+
+The central focus of Step 2 is the construction of an exceedence probability curve to estimate the probability of a weather impact on welfare. This allows for an interpretation like 'this model suggests than under current weather conditions, one could expect a 3% increase in poverty due to changing temperatures occuring once every 20 years'. All visualizations, tables, and outputs are based on different presentations of this curve. Hence, a summary of the exceedence probability curve methodology and interpretation lies at the bottom of this section.
+
+## Background & Analytical Caveats
+
+Step Two uses the underlying model defined in Step One, to calculate welfare based on alternative weather scenarios for a particular survey-year. With a particular baseline survey (default the latest) selected, the model will be re-run with substituted weather data to estimate weather outcomes. This weather data comprises a historical reference period which is taken to define the baseline weather standard, and future scenario which adjusts this baseline weather to simulate an alternative climate. 
+
+The first step is to decide on a single survey-year from which to apply the Step One model and both historical and alternative climate scenario data to calculate welfare impacts. Only a single survey-year can be run (and the WISE-APP defaults to the latest). This limitation is to ease interpretation and computation costs. 
+
+The next step is to define a historical weather distribution; the default is 1991–2020 (30 years) which aligns with the WMO standard climatological reference period. Nevertheless, this is a balance between sufficient years to get enough variation to define a probability curve and include somewhat rare events, and including so much historical years that the baseline weather represents an older, historic, and outdated climate. Local contextual knowledge may indicate that a tradoff for including slightly more historical data may be worth it (say a severe drought which occured just outside the 30 year window). However, it is not suggested to deviate significantly from less than 20 years of historical data. 
+
+With this historical weather period selected, the WISE-APP tool then uses CMIP6 climate projection data as a foundation to develop a simulation of future weather. This CMIP6 data includes
+projections for 2015–2100 under three shared socioeconomic pathways (SSPs): SSP 2-4.5, SSP 3-7.0, and SSP 5-8.5. Each SSP ensemble includes ~20 separate climate model estimates for weather, which also provides a way to capture uncertainty in the climate projection estimation itself. 
+
+As WISE-APP uses a model of underlying welfare and weather which assumes no adaption, or change in the population or economy, it is not recommended to use the app as a serious simulation of weather past 2050. This also simplifies the decisions over which SSP to use, as these pathways do not significantly diverge until at least 2050. The standard setting uses SSP3-7.0 and uses the 2025-2035 period as an estimate for weather in 2030. It is not recommended to divert from these values for serious simulation work - though alternative projects around 2050 may be useful to see expected future changes in weather.
+
+The choice of a projection period (2025-2035 for an estimate of 2030 in the default settings), points to differing sources of variation and how they are treated in the WISE-APP methodology. The historical weather period defines the underlying variation in weather used to calculate probability curves for historical data. To calculate the probability curves for alternative climate scenarios, the historical weather is adjusted in some way to represent an alternative climate. Under the standard settings - for each of the ensembles included in a particular SSP scenario and projection period (which accounts for climate model uncertainty), the average value of the weather for that projection period is taken (to account for variation in year-on-year dynamics due to El Nino/La Nina, etc.), and then this value is applied on the underlying historical weather period (used for the estimate of typical weather variation). This constitutes the standard mean-focused delta method, and the perturbation is applied either as an additive (tempurature and wind), or as multiplicative (for other variables like mm, days of rain, etc.) 
+
+::: {.callout-note}
+### Delta Method
+The current approach applied here adjusts means, and not variance, for future climate scenarios. Alternative delta method approaches not implemented in the WISE-APP can also adjust the variance in weather which can also be expected to occur due to climate change.
+:::
+
+With survey-year, historical weather, and future climate periods defined, one is then ready to run the simulation and move to results and interpretation.
+
+::: {.callout-important, collapse="true"}
+### Advanced Settings
+
+Two factors have not been discussed in this overview but do play a role in how different forms of variation in welfare outcome uncertainty calculations: residuals and coefficient uncertainty.
+
+Without residuals, the use of the model with updated weather will result in welfare outcomes with insufficient variance. Furthermore, in tests with the WISE-APP, the residuals are often heteroskedastic and hence using simulated normally-distributed residuals will inappropriately shift the probability distributions of the impact of weather on welfare. Given this, it is suggested to use the same residual for each household during the modeling in Step One - though it is possible that one could consider that overdetermined. An alternative in the app is to randomly resample from those residuals as well. Under no circumstances should 'no residuals', or 'normally distributed' options be selected for policy simulations. These exist as diagnostics mechanisms only.
+
+Coefficient uncertainty refers to the uncertainty in the Step One model estimation process. In an ideal setting, the uncertainty of the model specification process itself could be estimated by bootstrap resampling observations from the underlying dataset used to construct model one (accounting as well for the sampling strategy underlying the surveys themselves), to get probability distributions for all coefficients included in the model. However, this is computationally-infeasible in the current app. As a 'next-best' strategy, the standard errors (calculated under normally-distribution assumptions and presumptions of independence which may be weak) are used to calculate how uncertainty in the model estimation process can affect welfare outcomes. This calculation is restricted to only the variables which will change values through the simulation process: weather coefficients, and any policy simulation variables or interaction terms with those inputs. Most of this can be calculated analytically. However, some aggregate statistics (like Gini) require Monte Carlo estimation to calculate variance due to these factors. The default for this calculation is 150 draws.
+
+:::
+
+
 
 ## Interface
 
@@ -12,62 +49,23 @@ The Simulate Welfare step uses the model fitted in Step 1 to predict how welfare
 
 ## Instructions
 
-### 2.1 Simulation Settings
+Selecting settings to run the welfare simulation using alternative weather data is practically quite simple:
+1. Confirm the use of the last survey-year as the dataset for the basis of modeling (or adjust to another survey year if for some reason that survey is useful enough for inclusion in modeling but not enough as a basis for inference - perhaps the latest survey-year had more limited geographic coverage than an earlier version, for example). 
+2. Confirm or adjust the 30 year historical weather distribution (default is 1991-2020: Could adjust if a rare weather event is close to the threshold to include, or to move to the last 30 years, but limiting years covered is discouraged).
+3. Confirm or adjust the projection period and climate scenarios (default is 2025-2035 as using SSP3. On short time horizons prior to 2050, the SSP scenario should not affect outcomes significantly, and given inference limitations longer-term time horizons are discouraged for practical policy simulations.)
 
-Before running simulations, configure the following settings (accessible via the settings panel):
+Unless there are significant analytical issues and the user is comfortable with the undergirding statistical modeling: adjusting coefficient uncertainty settings and simulation residuals is discouranged.
 
-#### Historical weather period
+Once run however, a variety of visual displays will result to enable rich analysis and options to adjust aggregate welfare measures and uncertainty considerations of concern.
 
-The historical period defines the weather distribution used as the baseline. The default is **1991–2020** (30 years), which aligns with the WMO standard climatological reference period and provides a stable estimate of typical weather variability. The full available range is 1950–2024. Using shorter periods increases sensitivity to recent trends; longer periods capture a broader range of natural variability.
 
-#### Projection periods
+## Interpreting and Summarising Results
 
-Up to three future projection periods can be specified (e.g. 2025–2035, 2050–2060, 2080–2090). Only the first period is active by default (2025–2035). Each period must fall within 2015–2100.
+Prior to interpreting individual plots - it's important to note the various options for both aggregation analysis, and the different types of uncertainty and adjustments one can analyze.
 
-#### Residual method
+### Output Settings
 
-When predicting welfare for each simulated year, the model produces a fitted value for each household based on that year's weather conditions. A residual term is added to capture household-level variation not explained by weather — reflecting differences in skills, assets, social connections, and other factors the model does not observe. The residual method determines how that term is generated:
-
-- **Original** (default) — each household is assigned its own residual from the model estimation in Step 1. This preserves individual-level heterogeneity: households that were above or below their model-predicted welfare level in the survey remain above or below it in every simulated year. Recommended for most analyses, particularly when the goal is to assess weather-driven changes in population welfare rather than statistical uncertainty in individual predictions.
-- **Normal** — draws residuals from a normal distribution with mean zero and standard deviation equal to that of the training residuals. Appropriate when the residuals are approximately normally distributed and you want the simulated welfare distribution to reflect statistical sampling variation in household-level outcomes.
-- **Empirical** — bootstraps residuals by resampling from the training residual distribution. A non-parametric alternative to Normal when residuals are skewed or non-normal.
-- **None** — adds no residual; returns fitted values only. This understates welfare dispersion because it removes household-level variation. Useful for isolating the weather signal or for diagnostic purposes.
-
-#### Ensemble output
-
-For climate scenario simulations, multiple CMIP6 model runs are available. Results can be summarised as:
-
-- **Percentiles** (default) — reports the P10, P50, and P90 across ensemble members. The percentiles are customisable. WISE-APP selects the representative ensemble member closest to each requested percentile, based on the distribution of climate change signals across variables.
-- **All members** — retains all ensemble runs, showing the full spread of model uncertainty.
-
-### 2.2 Historical Simulations
-
-WISE-APP predicts welfare outcomes for each year in the selected historical period, using the observed weather for that year. This produces a distribution of simulated welfare outcomes that reflects the range of weather variability in the historical record.
-
-<!--
-### 2.3 Stochastic Catalog
-
-To capture rare or extreme weather events that may not appear in the historical record, WISE-APP can generate a stochastic catalog of 10,000 simulated years. This is achieved by adding structured random noise to historical observations, enabling a richer characterisation of tail risks.
--->
-
-### 2.3 Future Climate Scenarios
-
-WISE-APP applies a **delta method** to project future welfare impacts under climate change. The historical weather distribution is perturbed using change fields derived from CMIP6 climate model simulations under three shared socioeconomic pathways:
-
-- **SSP 2-4.5** — Intermediate emissions.
-- **SSP 3-7.0** — High emissions (default).
-- **SSP 5-8.5** — Very high emissions.
-
-All three SSPs can be run simultaneously and compared. The perturbation method is applied automatically based on variable type:
-
-- **Additive** for temperature and wind variables (°C, m/s) — the historical value is shifted by the climate change signal.
-- **Multiplicative** for accumulation variables (mm, days of rain) — the historical value is scaled by the climate change factor.
-
-Treat SSP projections as scenario-based estimates, not forecasts. The range across SSPs reflects emissions uncertainty; the range across ensemble members reflects model uncertainty.
-
-### 2.4 Interpreting Results
-
-#### Aggregation metric
+#### Outcome Aggregation
 
 Choose how to summarise the individual-level welfare predictions into a population-level indicator. For **continuous outcomes** (consumption), available metrics include:
 
@@ -80,6 +78,86 @@ Choose how to summarise the individual-level welfare predictions into a populati
 - **Average poverty (days/$)** — mean of 1/welfare; a measure of extreme deprivation
 
 For **binary outcomes** (poverty status), the default and only metric is the mean (percentage of the population classified as poor).
+
+#### Deviation 
+
+Standard guidance is to not make any adjustment to the presentation of data for ease of interpretation. Nevertheless, in the climate simulation literature sometimes one observes changes in relation to a historically calculated mean or median value, and that is done here.
+
+In this case, the scale will be set to the historical mean value (i.e. the mean poverty rate using 30-years historical simulation weather data using the model defined in Step One), and the spread and values of the historical and future weather simulations will be presented in reference to that change. 
+
+##### Uncertainty Bands
+
+By default, the WISE-APP includes uncertainty from multiple sources.
+
+For **historical baseline** weather data, that is the variation due to 30-yr historical weather distribution, but also can be the variation of **both** that variation and how it interacts with the coefficient uncertainty described above. This combination can be wider or smaller than just the uncertainty due to the weather distribution alone. One can adjust how much coefficient uncertainty to include in the model, from none at all, to max/min simulated values or the middle 99% of values. By default the middle 80% is selected.
+
+For **future climate scenario** weather data,  all of the variation from historical baseline data is included, but there is also uncertainty from how much the SSP scenario ensemble climate models disagree - termed 'intermodal spread'. More precisely, the 'inter-modal band' setting selects the quantile limit to calculate all other uncertainty thresholds across CMIP6 ensemble members of each model's year-mean. Similary to the coefficient band setting, you can select various thresholds, from none at all to the full range. Default is to select full range.
+
+::: {.callout-tip collapse="true"}
+### Analytical Tip
+In general, we suggest starting with welfare mean values, and poverty rate aggregates for analysis. Additionally, we suggest not applying any deviations, and consider analyzing findings with a coefficient band at 0 and 80%. We strongly suggest keeping the inter-modal band at the full range or 90%.
+:::
+
+### Results Plots
+
+Once a simulation has been finalized and initial parameters are set, one can begin analyzing the various summary plots.
+
+**Results Tab**:
+
+RECALL! The WISE-APP is not tuned to calculating small-tailed, rare events. Typical probabilities are calculated for up to  1 in 10 and 1 in 20 year impacts, but no further!
+
+- **Distribution of outcome across weather conditions, by climate scenario** —  This is the first graph on the results tab and shows a line plot visualizing how the distributions in outcomes vary given weather variation, for both historical and future scenarios. Critically, there are several components to these line plots which can be confusing to the reader. This summary document can aid analysis.
+-- The *central dot*  comprises the mean of the annual aggregate across all simulated (model, year) outcomes. All bands are drawn relative to the central dot and answer different questions about uncertainty. They are not meant to be added together - see the variance-contribution bar plot in the diagnostics tab for a plot indicating how these combine.
+
+Remaining bars given from thickest to thinnest:
+-- The *thick colored band* shows Inter-model spread, i.e. quantile across CMIP6 ensemble members of each model's time-mean. Can be asymmetric around the dot when models lean one way.
+-- The *middle colored band* shows to what extend does weather vary year-to-year within a typical model? Inter-annual variability: per-model quantile across simulation years, then averaged across models. Reflects the natural range of outcomes a single climate trajectory produces.
+-- The *innermost black band* shows the coefficient uncertainty. 
+
+- ** Exceedance probabilty by climate scenario** — If the first plot is the easiest to interpret, this is the core plot and object which undergirds the WISE- Analysis. Shows the probability that the outcome exceeds a given threshold, by scenario. The logit axis emphasises both tails; return period lines mark standard thresholds (e.g. 1-in-20-year events).
+-- The *thick* lines shows the exceedance probability curve for historical (black) and any alternative scenario (colored). For historical weather data, this includes the model with no other adjustments (coefficient uncertainty, etc) - just the inter-year variability. For alternative weather scenarios, it takes the median value of each ensemble-year.
+-- The *dotted* lines account for coefficient uncertainty around the thick bands.
+-- The broad ribbon (future scenarios only) show intermodal spread.
+-- Interpretation at bottom of this section.
+
+- ** Outcome value at return-period thresholds** Table:
+-- This table re-expressed the exceedance probability by climate scenario plot in table form. It presents for each scenario the values for outcomes at key points along the exceedance curve (1 in 20, 1 in 5, 1 in 2, and so forth). It does this not only for the central curve (the median?) But also will include the upper and lower thresholds for ensemble inter-model uncertinaty for future projections, as well as the pooled upper and lower thresholds for coefficient uncertainty if included.
+-- This table can be download for analysis later
+
+- ** Per-model trajectories across simulation years** Plot:
+-- As both the historical and future scenarios share the same underlying weather data (transformed to represent an alternative climate in the case of future scenarios), this graph shows for each of the simulation years in the underlying historical period, how the historical model outcome varies year-on-year, and how that relates to the ensemble models and climate projects which adjust things.
+
+::: {.callout-tip collapse="true"}
+### Analytical Tip
+- Typically, we suggest focusing on the first two plots. The distribution of outcomes plot is a quick glance to show chances in expect outcome due to differing weather inputs, while the exceedance probability plot shows more detail on that variance.
+:::
+
+### Diagnostics Plots
+
+On a separate tab, we also have two plots to show differing dynamics that can aid in analysis for those interested.
+
+- The **Weather input distributions** shows how weather varied between the survey-year used in the modeling, and the full historical and scenarios. This can indicate if the underlying survey data had sufficient spread and coverage for general shifts in weather observed over the broader periods, or if perhaps the underlying survey data used to build a weather-welfare relationship is limited in some way.
+- The **SD contribution by source of uncertainty** plot provides one general way to look at how uncertainty is broken down from different sources. Each segment is one source's standard deviation (square root of its variance contribution), in outcome units. Labels show each source's share of the bar's total length. As (not SDs) add under independence, so the stacked total is an upper bound on the true combined SD — read the bar as a side-by-side decomposition of where uncertainty comes from, not as a literal additive total.
+--Coefficient uncertainty = SD of the regression-fit per-outcome variance, averaged.
+--Inter-annual variability = SD of within-model year-to-year spread of the aggregate. This characterises the spread of simulated years, not uncertainty about the central tendency.
+--Inter-model spread (future scenarios only) = SD of across-model disagreement in the per-model mean aggregate — uncertainty about the central tendency arising from model choice.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #### Summary chart
 
@@ -146,3 +224,64 @@ The bands represent parametric statistical uncertainty given the chosen model an
 ### Technical Note: The Delta Method
 
 The uncertainty bands are computed analytically using the delta method — a first-order Taylor approximation that propagates coefficient variance through the aggregate welfare statistic. This is computationally efficient (no Monte Carlo simulation is required) and exact for linear statistics. For non-linear statistics — the poverty headcount ratio, Gini coefficient, median — the approximation is accurate when coefficient uncertainty is small relative to the curvature of the statistic, which is typical under WISE-APP's standard sample sizes. A kernel smoothing step regularises the headcount ratio gradient near the poverty line. The delta method computes the standard error of a population aggregate (e.g. mean welfare, headcount rate) rather than the prediction interval for an individual household.
+
+
+# DEPRECIATED
+
+### Historical weather period
+
+The historical period defines the weather distribution used as the baseline. The default is **1991–2020** (30 years), which aligns with the WMO standard climatological reference period and provides a stable estimate of typical weather variability. The full available range is 1950–2024. Using shorter periods increases sensitivity to recent trends; longer periods capture a broader range of natural variability.
+
+### Projection periods
+
+Up to three future projection periods can be specified (e.g. 2025–2035, 2050–2060, 2080–2090). Only the first period is active by default (2025–2035). Each period must fall within 2015–2100.
+
+### Residual method
+
+When predicting welfare for each simulated year, the model produces a fitted value for each household based on that year's weather conditions. A residual term is added to capture household-level variation not explained by weather — reflecting differences in skills, assets, social connections, and other factors the model does not observe. The residual method determines how that term is generated:
+
+- **Original** (default) — each household is assigned its own residual from the model estimation in Step 1. This preserves individual-level heterogeneity: households that were above or below their model-predicted welfare level in the survey remain above or below it in every simulated year. Recommended for most analyses, particularly when the goal is to assess weather-driven changes in population welfare rather than statistical uncertainty in individual predictions.
+- **Normal** — draws residuals from a normal distribution with mean zero and standard deviation equal to that of the training residuals. Appropriate when the residuals are approximately normally distributed and you want the simulated welfare distribution to reflect statistical sampling variation in household-level outcomes.
+- **Empirical** — bootstraps residuals by resampling from the training residual distribution. A non-parametric alternative to Normal when residuals are skewed or non-normal.
+- **None** — adds no residual; returns fitted values only. This understates welfare dispersion because it removes household-level variation. Useful for isolating the weather signal or for diagnostic purposes.
+
+#### Ensemble output
+
+For climate scenario simulations, multiple CMIP6 model runs are available. Results can be summarised as:
+
+- **Percentiles** (default) — reports the P10, P50, and P90 across ensemble members. The percentiles are customisable. WISE-APP selects the representative ensemble member closest to each requested percentile, based on the distribution of climate change signals across variables.
+- **All members** — retains all ensemble runs, showing the full spread of model uncertainty.
+
+### Historical Simulations
+
+WISE-APP predicts welfare outcomes for each year in the selected historical period, using the observed weather for that year. This produces a distribution of simulated welfare outcomes that reflects the range of weather variability in the historical record.
+
+### Future Climate Scenarios
+
+WISE-APP applies a **delta method** to project future welfare impacts under climate change. The historical weather distribution is perturbed using change fields derived from CMIP6 climate model simulations under three shared socioeconomic pathways:
+
+- **SSP 2-4.5** — Intermediate emissions.
+- **SSP 3-7.0** — High emissions (default).
+- **SSP 5-8.5** — Very high emissions.
+
+All three SSPs can be run simultaneously and compared. The perturbation method is applied automatically based on variable type:
+
+- **Additive** for temperature and wind variables (°C, m/s) — the historical value is shifted by the climate change signal.
+- **Multiplicative** for accumulation variables (mm, days of rain) — the historical value is scaled by the climate change factor.
+
+Treat SSP projections as scenario-based estimates, not forecasts. The range across SSPs reflects emissions uncertainty; the range across ensemble members reflects model uncertainty.
+
+# ALT EXPLANATIONS
+
+## ADVANCED SETTINGS
+
+Second, residuals for the model need to be selected: without including residuals in some fashion, the resulting welfare outcomes will be systematically biased. Standard guidance is to use 'original' residuals - where the residual from the original model process is re-applied back to the model output with new weather data for each household to calculate the welfare outcome. An alternative approach would be to use resampled residuates. It is *not* recommended to use normally distributed simulated residuals, as in general the WISE-APP model definition process usually results in heteroskedastic residuals and a normal-distributed simulation of residuals will bias results. Finally, no residual imputation should not be done except for diagnostic purposes.
+
+[Third, uncertainty in the coefficient values of the model defined in Step One needs to be estimated, as academic best practice calls for ackowledging that the welfare-weather model defined in Step 1 is an estimate itself, and subject to uncertainty. In the WISE-APP, this is mostly done using the analytic delta method using the standard errors from the model for most aggregate values of interest (mean, total, headcount, poverty gap, GINI, etc.) Monte Carlo estimation is done for non-analytically computable values. This provides some estimation of coefficient uncertainty and the default is 150 draws for Monte Carlo estimation.]{.mark} 
+
+::: {.callout-warning}
+## Coefficient Uncertainty
+The current approach applied here for coefficient uncertainty estimation has normal standard error assumptions which may be violated in practice. While the impact of this may be weak, a more robust approach would be to bootstrap resample the underlying surveys used to define the model in Step One to empirically estimate the variation in each of the coefficients. Neverthless, this is too time consuming to implement as part of the WISE-APP methodology at this time.
+:::
+
+

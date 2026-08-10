@@ -16,11 +16,11 @@ This user guide walks you through all key features and steps to use WISE-APP eff
 
 ## Analytical Caveat
 
-[While grounded in best-practice empirical research and advanced statistical methods, the results of the WISE-APP tool are **indicative** and based on a model which estimates the impact of direct, localized, and high-frequency weather variability on an outcome of interest (typically household welfare). 
+[While grounded in best-practice empirical research and advanced statistical methods, the results of the WISE-APP tool are **indicative** and based on a model which estimates the impact of direct, localized, and high-frequency weather variability on an outcome of interest (typically household welfare).]{.mark} 
 
-This model **does not** predict extreme tail-risk events, or estimate indirect-impacts of weather through broader non-locally defined associations (such as national or regional markets, or hydrology, etc.). Furthermore, it is highly dependent on the quality and granualarity of the underlying data, and the assumptions made in the modelling process. 
+[This model **does not** predict extreme tail-risk events, or estimate indirect-impacts of weather through broader non-locally defined associations (such as national or regional markets, or hydrology, etc.). Furthermore, it is highly dependent on the quality and granualarity of the underlying data, and the assumptions made in the modelling process.]{.mark} 
 
-Through this document, methodological caveats and limitations are highlighted, so as to enable users to make informed choices for how to interpret results.]{.mark}
+Through this document, methodological caveats and limitations are presented in the **Analytical Caveats** section of each page, and within relevant sections with **Analytical Tips** boxes, so as to enable users to make informed choices for how to interpret results.
 
 
 ## How to access WISE-APP

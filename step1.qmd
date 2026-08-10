@@ -22,11 +22,11 @@ Other major considerations include the transformation of weather variables, whic
 
 ## Instructions
 
-### 1.1 Sample Selection
+### Sample Selection
 
 Select the **unit of analysis**: Individual, Household (default), or Firm. This determines which survey microdata are loaded and which variables are available in the model.
 
-Select the **country** of interest (up to two countries can be combined, though this is not recommended) and the **survey years** available for each country. Click **Survey Stats** to generate summary statistics, interview location maps, and welfare distribution plots for the selected sample.
+Select the **country** of interest and the **survey years** available for each country. Click **Survey Stats** to generate summary statistics, interview location maps, and welfare distribution plots for the selected sample.
 
 ::: {.callout-tip collapse="true"}
 ### Analytical Tip
@@ -35,7 +35,7 @@ The survey stats tab provides a wealth of information for each country-survey co
 :::
 
 
-### 1.2 Welfare Outcome
+### Welfare Outcome
 
 Choose the welfare outcome to model:
 
@@ -61,7 +61,7 @@ If using welfare data - be sure to check the distribution. The WISE-APP log-tran
 
 :::
 
-### 1.3 Weather Variables
+### Weather Variables
 
 Select up to two weather variables from the ERA5-Land dataset. For each variable, configure:
 
@@ -86,14 +86,14 @@ This Weather Transformation step is one of the most important steps in the entir
 
 **Temporal Aggregation**: There are likely default specifications for each weather variable of interest. However, this does structure the model estimation process - is one interested in the number of days in a month that exceeded a temperature threshold, or the average temperature over the month? Which is more important depends on the local climate and economic context and shapes findings.
 
-[**Transformation**: The default is to use the deviation from mean or standardised anomaly, which captures anomalous conditions rather than absolute weather levels. However, this can also lead to interpretive difficulty. It is recommended to run this both transformed and untransformed not only to assess robustness of results, but ease interpretability when understanding and communicating results.]{.mark} 
+[**Transformation**: The default is to use the deviation from mean or standardised anomaly, which captures anomalous conditions rather than absolute weather levels. Use the deviation-from-mean or standardised anomaly transformation when you want to capture anomalous conditions rather than absolute weather levels. This is particularly useful when comparing results across regions with different climates. Nevertheless, it is recommended to run this both transformed and untransformed not only to assess robustness of results, but ease interpretability when understanding and communicating results.]{.mark} 
 
 [**Variable Treatment**: One can decide to 'bin' weather variables into quantiles - which helps capture non-linear effects in weather data, or to use continuous variables (with optional polynomial expansions). While continuous and polynomial expansions are used in the literature, we recommend using binned weather variables as the default, and comparing with continous as a robustness check. Continuous variables with polynomial expansions can have extreme tails, which can be problematic for interpretation and simulation.]{.mark} 
 :::
 
 
 
-### 1.4 Model Specification
+### Model Specification
 
 Configure the regression model:
 
@@ -147,6 +147,7 @@ Select one or more variables to absorb as fixed effects. Defaults to survey year
 
 It is recommended to run multiple specifications to determine the final function variable set. In particular, one should run with LASSO selection to determine the most important covariates and general performance, comparing that to the performance of a user-defined covariate set (or a defined set with LASSO selection for remaining covariates) to be sure of not overfitting.
 
+ [Note (from earlier 3.5 'Tips and Common Issues - Delete?' If using LASSO covariate selection, review the selection frequency output to understand which variables were consistently selected across imputation runs.]{.mark}
 :::
 
 #### Regression engine
@@ -166,9 +167,14 @@ Non-parametric engines are currently under development and not yet available for
 
 Machine learning engines are suited for predictive accuracy rather than causal inference, as their outputs cannot be directly interpreted as marginal effects.
 
-### 1.5 Interpreting Results
+### Interpreting Results
 
 After clicking **Run model**, the results tab appears with three panels, and a model fit tab with additional diagnostics.:
+
+::: {.callout-caution collapse="true"}
+## Section focus on OLS
+Differing model selection options (OLS, logistic, RIF, etc.) will provide different visualizations on the results tab. This section focuses on the presentation using an OLS model.
+:::
 
 **Results Tab**:
 
@@ -176,29 +182,33 @@ After clicking **Run model**, the results tab appears with three panels, and a m
 - **Marginal effect of weather** — coefficient plot with confidence intervals for all three progressive models. Compare across models to assess robustness: large changes from model (1) to model (3) suggest confounding; stability across models increases confidence in the estimated weather effect.
 - **Regression results** — full coefficient table. Relative importance bars show each variable's percentage contribution to in-sample fit (R²).
 
-**Key interpretation rules:**
-
+::: {.callout-tip collapse="true"}
+### Analytical Tip
 - A weather coefficient that is significant in model (1) but shrinks toward zero in model (2) suggests the raw effect partly reflects spatial or temporal confounding absorbed by the fixed effects.
+- Check whether interaction terms are statistically significant before using them in the Step 3 Policy Simulation component. Non-significant interactions will produce policy effects only through the intercept, not through changes in weather sensitivity.
 - A significant interaction term means the weather-welfare relationship is heterogeneous — some groups are more exposed or vulnerable. This heterogeneity is what Step 3 exploits to estimate policy impacts on resilience.
 - Low overall R² does not mean weather variables are unimportant; welfare outcomes have many determinants. Focus on the significance and direction of the weather coefficients rather than overall fit.
+- If model fit is poor, consider whether the references periods selected aligns with the economic calendar of the survey population (e.g. harvest month vs. planting month for agricultural households).
+:::
 
 
-[**Model Fit:**]{.mark}
-
+**Model Fit:**
 - **Fit Statistics** - short table showing key performance statistics for ease of reference
 - **Relative Importance of Predictors** - bar chart showing the relative contribution of each predictor to the overall model fit (R²)
 - **Predicted vs Actual Welfare** - bar plot showing the relationship between predicted and actual values, useful for assessing outcome predictions
 - **Residuals vs Fitted Plot** - scatter plot showing the relationship between residuals and fitted values, useful for assessing model fit and identifying potential outliers or heteroscedasticity
 
-## Tips and Common Issues
+::: {.callout-tip collapse="true"}
+### Analytical Tip
+- Fit statistics shows a brief summary of performance statistics also accessible in the previous tab. Mainly for reference.
+- The relative importance of predictors chart shows how important an individual indicator component is in the *overall* model fit (R²). This can be very useful to indicate which variables are doing the most work in your model - and which are the most important to focus on for quality checks/missing, etc. Nevertheless, individual components contributions will vary in importance for particular hosuehold predictions.
+- [The predicted vs actual welfare plot is useful as an analysis of spread - important given the non-normal interactions of weather on welfare and the general concern with tails.]{.mark}
+- [NOTE: Maybe someone else has a better description: The residuals vs fitted plot can help analyze and understand bias at the tails, issues of outliers or heteroscedasticity.]{.mark}
+:::
 
-- **Tip:** Use the deviation-from-mean or standardised anomaly transformation when you want to capture anomalous conditions rather than absolute weather levels. This is particularly useful when comparing results across regions with different climates.
-- **Tip:** Check whether interaction terms are statistically significant before using them in Step 3. Non-significant interactions will produce policy effects only through the intercept, not through changes in weather sensitivity.
-- **Tip:** If using LASSO covariate selection, review the selection frequency output to understand which variables were consistently selected across imputation runs.
-- **Issue:** If model fit is poor, consider whether the reference period aligns with the economic calendar of the survey population (e.g. harvest month vs. planting month for agricultural households).
-- **Issue:** With two economies selected, ensure that variable names and survey structure are consistent across economies. Mismatched variable names will cause covariates to drop out silently.
 
-## Statistical Methods {#statistical-methods}
+
+## Statistical Methods Background {#statistical-methods}
 
 This section provides technical background on the regression methods available in Step 1. Users primarily interested in the workflow can skip ahead to Step 2; users who want to understand what the model estimates and how to interpret coefficients correctly will find this section useful.
 

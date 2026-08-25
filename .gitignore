@@ -53,7 +53,10 @@ rsconnect/
 _book/
 
 # Claude local settings
-.claude/settings.local.json
+.claude/
+
+# Kilo local settings
+.claude/
 
 # Posit local settings
 .posit/

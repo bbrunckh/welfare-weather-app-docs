@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "locale": "en_US",
+  "platform": "4.5.3",
+  "metadata": {
+    "appmode": "quarto-static",
+    "primary_rmd": "index.qmd",
+    "primary_html": null,
+    "content_category": null,
+    "has_parameters": false
+  },
+  "quarto": {
+    "version": "1.9.37",
+    "engines": ["markdown"]
+  },
+  "packages": null,
+  "files": {
+    "_book/data.html": {
+      "checksum": "e9ed6643aa8f70120f923f33a42f5cad"
+    },
+    "_book/images/locations.png": {
+      "checksum": "b0aa6d9816a2e378d17c85dc0ed70c9a"
+    },
+    "_book/index.html": {
+      "checksum": "fd3505e535f52372053947e117a77ccf"
+    },
+    "_book/search.json": {
+      "checksum": "1e093e5c88549ad05dcaac6d1482b072"
+    },
+    "_book/site_libs/bootstrap/bootstrap-2e1b7c6138cba8af76c4db407c0ee04f.min.css": {
+      "checksum": "2e1b7c6138cba8af76c4db407c0ee04f"
+    },
+    "_book/site_libs/bootstrap/bootstrap-icons.css": {
+      "checksum": "886da841d7421705f715f600c5ff11bb"
+    },
+    "_book/site_libs/bootstrap/bootstrap-icons.woff": {
+      "checksum": "efe54401ef52214fd3b701e23ff88c5f"
+    },
+    "_book/site_libs/bootstrap/bootstrap.min.js": {
+      "checksum": "e2b09c06f0e714b6144a6788a28e3950"
+    },
+    "_book/site_libs/clipboard/clipboard.min.js": {
+      "checksum": "15f52a1ee547f2bdd46e56747332ca2d"
+    },
+    "_book/site_libs/quarto-html/anchor.min.js": {
+      "checksum": "91bcf6cd1fd88fec3f109811e5fc3546"
+    },
+    "_book/site_libs/quarto-html/popper.min.js": {
+      "checksum": "3a4a291ccf3f1ea0f82b641542fd3827"
+    },
+    "_book/site_libs/quarto-html/quarto-syntax-highlighting-acf12a64177840b8d86f2d4f01b2e9fb.css": {
+      "checksum": "acf12a64177840b8d86f2d4f01b2e9fb"
+    },
+    "_book/site_libs/quarto-html/quarto.js": {
+      "checksum": "6f4245742deb3cc92337dbe2701ccfe1"
+    },
+    "_book/site_libs/quarto-html/tabsets/tabsets.js": {
+      "checksum": "e8d6a8862b33ccc461f8fd532e05b365"
+    },
+    "_book/site_libs/quarto-html/tippy.css": {
+      "checksum": "ebd6f8ce46a677e1a4f5f8a8317109a9"
+    },
+    "_book/site_libs/quarto-html/tippy.umd.min.js": {
+      "checksum": "d828775275749701b48bd9d958814111"
+    },
+    "_book/site_libs/quarto-nav/headroom.min.js": {
+      "checksum": "ace0360e576db9b6e7df48ac68ddbbf4"
+    },
+    "_book/site_libs/quarto-nav/quarto-nav.js": {
+      "checksum": "12d334846b27bdb493298c08277bdf7f"
+    },
+    "_book/site_libs/quarto-search/autocomplete.umd.js": {
+      "checksum": "b514204f2ef1ca7a8e2ad4579d263504"
+    },
+    "_book/site_libs/quarto-search/fuse.min.js": {
+      "checksum": "de7d60e4a6881074275feca14b84a49d"
+    },
+    "_book/site_libs/quarto-search/quarto-search.js": {
+      "checksum": "9c992af743ca88c8c5f650cf312c4e61"
+    },
+    "_book/step1.html": {
+      "checksum": "ab2ffc310607b3f159f4cdb21503e6ab"
+    },
+    "_book/step2.html": {
+      "checksum": "bca213c923c43a7145b888b4b0f33a2c"
+    },
+    "_book/step3.html": {
+      "checksum": "54860a9efbcc79413831b50f769d2faa"
+    },
+    "_book/styles.css": {
+      "checksum": "3b5973a788498ac7e7784974b22b56b0"
+    },
+    "_freeze/index/execute-results/html.json": {
+      "checksum": "bf589d92af916dbee2db2a97fe768b8c"
+    },
+    "_freeze/site_libs/clipboard/clipboard.min.js": {
+      "checksum": "15f52a1ee547f2bdd46e56747332ca2d"
+    },
+    "_quarto.yml": {
+      "checksum": "c84651e4a41bd9899f8261be827c3bf8"
+    },
+    ".claude/settings.local.json": {
+      "checksum": "8e0828d2a086bdeebb593312feedfe5d"
+    },
+    ".posit/publish/deployments/deployment-S49O.toml": {
+      "checksum": "0ea5630ab2e8b9fc31d5e3a95625c966"
+    },
+    ".posit/publish/wise-app-docs-ONOF.toml": {
+      "checksum": "755871478d07bb20b14376695632db93"
+    },
+    "data.qmd": {
+      "checksum": "061cb1940a0d4c03b0f4bdfa2b1d39ff"
+    },
+    "images/locations.png": {
+      "checksum": "b0aa6d9816a2e378d17c85dc0ed70c9a"
+    },
+    "index.qmd": {
+      "checksum": "c6d564136b1824f0c3a27055b64f1b02"
+    },
+    "LICENSE": {
+      "checksum": "52c33e8ea37b8f440bf55fa5e7c0f911"
+    },
+    "README.md": {
+      "checksum": "a59fee51e5671b67ac3c2a81fc516329"
+    },
+    "references.bib": {
+      "checksum": "d41d8cd98f00b204e9800998ecf8427e"
+    },
+    "step1.qmd": {
+      "checksum": "1128efa8600b31af7365d914aa9c4c15"
+    },
+    "step2.qmd": {
+      "checksum": "30a957d5a79a21faf1ce8924b3407dac"
+    },
+    "step3.qmd": {
+      "checksum": "c0921c53ce393815f00823bd76e9eac8"
+    },
+    "styles.css": {
+      "checksum": "3b5973a788498ac7e7784974b22b56b0"
+    },
+    "WB-IGO-RIDER.md": {
+      "checksum": "6cb042c321ae821662612c9b2602c454"
+    }
+  },
+  "users": null
+}

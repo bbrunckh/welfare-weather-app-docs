@@ -1,10 +1,10 @@
 ---
-title: "Step 2: Simulate Welfare"
+title: "Step 2: Climate Scenarios"
 ---
 
 ## Overview
 
-The Simulate Welfare step uses the model fitted in Step One to predict how welfare would vary under a range of weather conditions. It is this *range* of weather conditions which is critical for establishing both typical variation in welfare due to weather, and to simulate how a differing weather conditions could impact this. 
+The Climate Scenarios step uses the model fitted in Step One to predict how welfare would vary under a range of weather conditions. It is this *range* of weather conditions which is critical for establishing both typical variation in welfare due to weather, and to simulate how a differing weather conditions could impact this. 
 
 This variation in weather comes in two parts: a historical weather distribution, and a future climate projection. Given the considerably diverse sources of uncertainty from the model definition process in Step One, and the simulations conducted here in Step Two, several settings, results visualizations, and diagnostic plots are presented to aid in the interpretation of this heterogenous uncertainty. 
 

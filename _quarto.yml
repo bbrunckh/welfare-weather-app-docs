@@ -6,7 +6,7 @@ book:
   title: "WISE-APP docs"
   # author: "Ben Brunckhorst"
   date: today
-  # description: "WISE-APP documentation and user guide."
+  description: "WISE-APP documentation and user guide"
   
   chapters:
     - index.qmd

@@ -2,67 +2,69 @@
 title: "Overview"
 ---
 
-::: {.callout-important appearance="simple"}
-### Under Construction. Please check back soon for the latest version.
+::: {.callout-note appearance="simple"}
+This user guide is updated regularly to reflect ongoing developments, new features, and methodological refinements in WISE-APP.
 :::
 
-## Welcome to WISE-APP docs
+**WISE-APP** (*Weather Impact Simulation and Evaluation for Adaptation Policy and Planning*) is an analytical tool designed to stress-test household welfare under historical and projected climate scenarios, and to evaluate resilience-building policy interventions.
 
-**WISE-APP** (Weather Impact Simulation and Evaluation for Adaptation Policy and Planning) is a tool designed to estimate potential welfare outcomes under different weather conditions before events occur. 
+## Access WISE-APP
 
-It quantifies the relationship between weather and welfare, simulates outcomes under historical and future climate scenarios, and evaluates the impact of various adaptation policies.
+- [**Web app**](https://datanalytics-int.worldbank.org/wise-app){target="_blank"} -- *requires World Bank single sign-on credentials*
+- [**R Package**](https://github.com/worldbank/welfare-weather-app){target="_blank"} -- *run locally or use custom data, requires access to valid [Data](data.qmd)*
 
-This user guide walks you through all key features and steps to use WISE-APP effectively.
-
-## Analytical Caveat
-
-[While grounded in best-practice empirical research and advanced statistical methods, the results of the WISE-APP tool are **indicative** and based on a model which estimates the impact of direct, localized, and high-frequency weather variability on an outcome of interest (typically household welfare).]{.mark} 
-
-[This model **does not** predict extreme tail-risk events, or estimate indirect-impacts of weather through broader non-locally defined associations (such as national or regional markets, or hydrology, etc.). Furthermore, it is highly dependent on the quality and granualarity of the underlying data, and the assumptions made in the modelling process.]{.mark} 
-
-Through this document, methodological caveats and limitations are presented in the **Analytical Caveats** section of each page, and within relevant sections with **Analytical Tips** boxes, so as to enable users to make informed choices for how to interpret results.
-
-
-## How to access WISE-APP
-
-[WISE-APP online](https://datanalytics-int.worldbank.org/content/5163b09e-1eb3-47e6-bb6a-4f0abcf7a28f){target="_blank"} [Under development]{style="color: red;"}
-
-- This option requires World Bank single sign-on credentials. 
-
-
-[WISE-APP R package](https://github.com/worldbank/welfare-weather-app){target="_blank"} [Under development]{style="color: red;"}
-
-- This option requires R and access to WISE-APP data.
-- To install and run locally:
-
-```{r}
-remotes::install_github("worldbank/welfare-weather-app")
+```r
+# install.packages("pak")
+pak::pak("worldbank/welfare-weather-app")
 wiseapp::run_app()
 ```
 
-## This guide
+## This Guide
 
-This guide includes the following sections:
+This guide describes the tool's data and three analysis steps:
 
-- **Data** — An overview of the household survey and weather data that underpin WISE-APP, including sources, structure, and coverage.
-- **Model Welfare** — Decisions, defaults, and interpretation guidance for the modelling step.
-- **Simulate Welfare** — How to configure and run historical and climate-scenario simulations, and how to read the results.
-- **Policy Scenarios** — How to define and interpret each type of policy intervention.
+[**Data**](data.qmd) — Sources, structure, and spatial linking of survey data (GMD) with climate datasets (ERA5-Land / CMIP6). Data preparation scripts are hosted in [welfare-weather-app-data](https://github.com/worldbank/welfare-weather-app-data){target="_blank"}.
 
-## Data
+[**Step 1 - Model Welfare**](step1.qmd) — Estimate the empirical relationship between local weather and a welfare outcome of interest — such as household consumption or poverty status — from geocoded survey data. The fitted model is the foundation for all subsequent steps.
 
-WISE-APP connects to a data directory containing household survey microdata and weather data. The data are spatially linked using the H3 indexing system. For more details on the data sources, structure, aand coverage, see the [Data section](data.qmd) of this guide.
+[**Step 2 - Climate Scenarios**](step2.qmd) — Simulate the distribution of weather-driven welfare outcomes under historical conditions and for future climate projections (CMIP6 scenarios), by applying the model from Step 1.
 
-- [This repository](https://github.com/worldbank/welfare-weather-app-data) contains the code used to prepare specific data sources for WISE-APP.
+[**Step 3 - Policy Scenarios**](step3.qmd) — Re-simulate welfare under counterfactual policy scenarios (social protection, infrastructure, labor, education...) to quantify welfare gains and evaluate changes in climate resilience against the Step 2 baseline.
 
-## Analysis
+Throughout the guide, callout boxes highlight important context:
 
-After connecting to the data, WISE-APP performs analysis in 3 steps:
+::: {.callout-tip appearance="simple"}
+### Analytical Tip
+Practical guidance for selecting model inputs, transformations, and interpreting outputs.
+:::
 
-- **Model Welfare** — Establish the statistical relationship between weather and outcomes of interest. The fitted model is the foundation for all subsequent steps.
-- **Simulate Welfare** — Apply the fitted model to historical and future climate scenarios to produce a distribution of weather-driven outcomes.
-- **Policy Scenarios** — Re-simulate outcomes under counterfactual policy interventions (social protection, infrastructure, digital access, labour market) to quantify direct welfare gains and changes in climate resilience.
+::: {.callout-warning appearance="simple"}
+### Methodological Caveat
+Important analytical boundaries and model assumptions to keep in mind.
+:::
 
-## Getting help
+::: {.callout-note appearance="simple"}
+### Note
+Technical details, configuration options, and upcoming features.
+:::
 
-If you encounter any issues or have questions, please contact [contact: name/email/team].
+## Limitations
+
+WISE-APP is designed as an **illustrative stress-testing tool**, not a forecasting engine or causal impact evaluation framework. Its estimates capture conditional statistical associations between local weather variability and household welfare.
+
+When interpreting results, keep four key caveats in mind:
+
+- **Empirical associations, not causal mechanisms:** The reduced-form regressions identify net statistical relationships between observed weather conditions and welfare. They do not isolate specific transmission channels (such as price shifts, health impacts, or labor supply adjustments).
+- **Stress-testing scenarios, not poverty forecasts:** Simulations apply estimated historical relationships to future climate projections while holding baseline economic structures fixed. They abstract from long-term economic growth, structural change, migration, and demographic shifts.
+- **Direct, localized shocks only:** The model captures high-frequency, localized weather variability observed in survey data. It does not model unobserved extreme tail-risk events (e.g., 1-in-100-year disasters) or indirect macroeconomic and market-wide spillovers.
+- **Observed proxies, not operational appraisals:** Policy scenarios simulate shifts in observed survey variables (such as access to electricity or educational attainment) as proxies for resilience. They do not account for service quality, institutional capacity, or delivery bottlenecks, and should not be used mechanically for project appraisal or budget allocation.
+
+## Citation
+
+Please cite this guide as follows:
+
+> World Bank. 2026. “WISE-APP User Guide: Weather Impact Simulation and Evaluation for Adaptation Policy and Planning.” Available at https://datanalytics.worldbank.org/wise-app-docs.
+
+## Getting Help
+
+To report issues, ask questions, or suggest improvements, please [open an issue](https://github.com/worldbank/welfare-weather-app-docs/issues){target="_blank"} on GitHub.

@@ -1,79 +1,93 @@
 ---
 title: "Data"
 ---
+
 ## Overview
 
-WISE-APP connects to a data directory on a local or remote file system. The directory contains three top-level components: **metadata**, **microdata**, and **hazard** (historical weather and future climate estimates) data. Microdata and hazard data are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with the weather and events data.
+WISE-APP connects to a standardized data directory structured into three primary components: **metadata**, **microdata**, and **hazard** datasets (historical weather and future climate projections). Microdata and hazard layers are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with gridded climate data.
 
-## Background & Analytical Caveats
+## Connecting to Data
 
-The WISE-APP tool uses household survey microdata, historical weather data, and climate projections to estimate the impact of weather on welfare outcomes, all merged at the appropriate interval using the H3 spatial indexing system. This section describes the data sources, file structure and organization, and linking process which underpins the WISE-APP tool. 
+WISE-APP is designed to query datasets lazily using an in-process **DuckDB** engine, enabling high-performance queries across local or remote cloud storage without downloading entire datasets into memory.
+
+### Web Application (Automatic Connection)
+
+When accessing WISE-APP via the internal web platform ([WISE-APP Online](https://datanalytics-int.worldbank.org/wise-app){target="_blank"}), the data connection is **automatically configured**. The app connects directly to curated Databricks Volumes hosting harmonized GMD surveys, ERA5-Land reanalysis, and CMIP6 climate scenarios. No manual setup or credential entry is required.
+
+### Local R Package (Interactive Connection via Overview Page)
+
+When running the application locally in R, launch the app:
+
+```r
+# install.packages("pak")
+pak::pak("worldbank/welfare-weather-app")
+wiseapp::run_app()
+```
+
+On startup, the **Overview** landing page provides an interactive **Data** connection panel allowing you to connect to any supported storage backend:
+
+- **Local folder:** Path to a local directory (defaults to `data/`).
+- **Amazon S3:** Bucket name, key prefix, region, and AWS access keys.
+- **Google Cloud Storage (GCS):** Bucket name, prefix, and service account JSON.
+- **Azure Blob / Data Lake Storage:** Storage account, container name, prefix, and account key or Service Principal credentials.
+- **Hugging Face:** Dataset repository, subdirectory, and access token.
+- **Databricks:** Workspace URL, Databricks Volume path (`/Volumes/...`), and OAuth M2M credentials.
+
+::: {.callout-tip appearance="simple"}
+### Analytical Tip: Environment Credentials
+Credential fields in the UI are optional if credentials are pre-configured in your local `.Renviron` file (e.g., `AWS_ACCESS_KEY_ID`, `AZURE_STORAGE_KEY`, `DATABRICKS_HOST`, etc.).
+:::
+
+::: {.callout-note appearance="simple"}
+### Data Preparation Repository
+The data processing pipelines used to clean, harmonize, and spatially index microdata and hazard layers are maintained in the [welfare-weather-app-data](https://github.com/worldbank/welfare-weather-app-data){target="_blank"} repository.
+:::
+
+## Data Sources & Methodology
+
+This section describes the data sources prepared for the web app. 
 
 ### Household Survey Microdata (GMD)
 
- The quality of results of the WISE-APP is highly dependent on the quality of input data. The household survey microdata, drawn from the Global Monitoring Database (GMD), are of high-quality and widely used. Nevertheless, one should note that:
+Socioeconomic data are drawn from the World Bank’s Global Monitoring Database (GMD), a repository of harmonized multi-topic household surveys. GMD provides standardized consumption aggregates, poverty measures, and demographic indicators across countries and survey rounds.
 
-1.  Beyond basic the demographic information and consumption variables, the availability of other variables (education, health, shelter, durables, etc.) varies widely across surveys and countries, and may frequently be not collected entirely or missing for large shares of households. In the Step 1 modeling process, if one defaults to the LASSO variable selection approach, the WISE-APP will only use variables with at least 80% coverage across households in each survey. Careful descriptive analysis of survey microdata is recommended to ensure that variables of interest are sufficiently available and not systematically missing for certain sub-populations.
+::: {.callout-warning appearance="simple"}
+### Analytical Caveat: Survey Design & Variance Estimation
+While survey sampling weights are applied during reporting to ensure representativeness, GMD does not harmonize full complex survey design parameters (such as primary sampling units, strata, and clusters). Consequently, standard errors estimated by the regression models may be underestimated. The inclusion of spatial fixed effects partially mitigates this issue, but uncertainty intervals should be interpreted with appropriate caution.
+:::
 
-2. The household survey itself may not fully cover the country pending access issues or other restrictions. One should be careful to analyze the coverage of the survey data to be sure that any gaps are acknowledged in resulting analysis.
+::: {.callout-warning appearance="simple"}
+### Analytical Caveat: Spatial & Temporal Granularity
+Accurate linking with weather data depends on the precision of interview dates and geolocation. When survey data are anonymized to broad administrative regions (e.g., province or governorate) or coarse time intervals (e.g., quarter of interview), the spatial and temporal variation in weather shocks is smoothed out, reducing statistical power and attenuation toward zero.
+:::
 
-3. [The household survey data are collected typically using a complex survey sampling design. While the WISE-APP tool does incorporate survey weights in the process for reporting results (and are as such unbiased in respect to representing the sampling frame), GMD data does not harmonize the full reporting of survey design information (e.g. strata, clusters, etc.) which enable proper variance estimation for results. Thus, the WISE-APP tool does not currently incorporate survey design information in the modeling process, and as such, the standard errors of the estimates may be underestimated. Importantly, the use of spatial fixed effects may somewhat mitigate this concern. Nevertheless, users should be aware of this limitation when interpreting results.]{.mark}
+::: {.callout-tip appearance="simple"}
+### Analytical Tip: Variable Coverage & Missing Data
+Beyond core demographic and consumption variables, the availability of resilience proxies (e.g., electricity access, education, assets) varies across surveys. When using automated selection algorithms like LASSO in Step 1, variables with high missing rates (>10%) are excluded by default. It is strongly recommended to review survey statistics prior to modeling to verify that key variables are not systematically missing for vulnerable sub-populations.
+:::
 
-4. As both the timing and location of the survey data is critical for matching to weather data and the broader WISE-APP methodology process, one should look carefully at the specificity of the survey data. Surveys can be collected only part of the year, which affects the variation of weather data used and impacts the WISE-APP modeling process. Additionally, [survey data may be censored to aid anonymity, such as reporting only the quarter of the interview date, or reporting only the region or province of the household location. **This specificity should be analyzed carefully prior to analysis, as it can have a major impact on findings.** Matching with weather data at the governorate level to the nearest quarter will be much less precise, and be much less likely to find statistically significant or indeed relevant impacts of weather on welfare outcomes using the WISE-APP tool.]{.mark}
+### Historical Weather Reanalysis (ERA5-Land)
 
-### Historical Weather Data (ERA5-Land)
+Historical weather data are obtained from **ERA5-Land**, a global climate reanalysis produced by the European Centre for Medium-Range Weather Forecasts (ECMWF). ERA5-Land combines physical modeling with global in-situ and satellite observations to provide consistent, hourly estimates of meteorological variables at a ~9 km spatial resolution from 1950 to the present.
 
-ERA5-Land is a high-resolution global climate reanalysis dataset produced by the European Centre for Medium-Range Weather Forecasts (ECMWF). It provides hourly estimates of 20+ weather variables at a spatial resolution of 9 km, covering the period 1950–2024. ERA5-Land is widely used in climate impact research due to its high quality and consistency. 
+For WISE-APP, ERA5-Land variables are aggregated to monthly summaries (e.g., mean temperature, precipitation sums, standardized anomalies) and spatially mapped onto H3 hexagonal cells.
 
-While a re-analysis dataset is not a perfect representation of local conditions, it is the best available data for historical weather conditions, based on observational data and geophysical modeling to develop a consistent dataset.
-
-[For the WISE-APP tool, ERA5-Land data are aggregated to monthly resolution and spatially indexed using the H3 indexing system (to be described below). This monthly temporal resolution is important to note for the WISE-APP modeling process, as it shapes the modeling and interpretation decisions. Nevertheless, this monthly resolution can be somewhat flexible, as one can consider the number of days in a month that exceeded a temperature threshold, etc.]{.mark}
-
-Analytical Caveats:
-
-1. When building a model using the WISE-APP tool, one should look at the extent to which historical weather was successfully merged with household data, as matching issues may occur which cause only a subset to be used and bias results.
-
-2. One should also look at the variation in the weather data merged with the household data that will be used in modeling. [Some variation is essential for a regression model to be able to identify the impact of weather on welfare outcomes, and spatial and temporal variation as well to distinguish the impact of weather distinct from temporal and locational fixed effects.]{.mark} 
-
+::: {.callout-warning appearance="simple"}
+### Analytical Caveat: Local Variation and Fixed Effects Identification
+A regression model with spatial and temporal fixed effects identifies weather impacts solely from *within-location* and *within-time* deviations from local baselines. If a country or survey sample exhibits little localized weather variation across interview dates, the model cannot identify meaningful statistical relationships.
+:::
 
 ### Climate Projections (CMIP6 SSP Scenarios)
 
-The Coupled Model Intercomparison Project Phase 6 (CMIP6) is a coordinated effort among climate modeling centers worldwide to produce standardized climate projections under different greenhouse gas emissions scenarios. WISE-APP uses CMIP6 projections for 2015–2100 under three shared socioeconomic pathways (SSPs): SSP 2-4.5, SSP 3-7.0, and SSP 5-8.5. Multiple model runs are included to capture uncertainty in climate projections.
+Future climate scenarios are sourced from the **Coupled Model Intercomparison Project Phase 6 (CMIP6)** under three Shared Socioeconomic Pathways (SSPs):
 
-The WISE-APP tool used the standard delta method to perturb historical weather observations using CMIP6 change fields, producing future weather scenarios that reflect both historical variability and projected climate change. By doing this for each individual model within the ensemble SSP forecast, the tool also captures this model uncertainty in climate projections. The same set of weather variables is available for both historical and future simulations.
+- **SSP 2-4.5:** Intermediate greenhouse gas emissions trajectory.
+- **SSP 3-7.0:** Medium-to-high emissions baseline trajectory.
+- **SSP 5-8.5:** High-end emissions fossil-fueled development trajectory.
 
-The delta-method applied here adjusts the mean of the historical weather data to reflect the projected change in climate, while preserving the historical variability. This is a standard approach in climate impact analysis, however, one may consider that climate change could affect the variance of weather as well. This is currently not implemented, but could be considered in future updates.
+CMIP6 climate projections provide monthly temperature and precipitation projections across global climate models (GCMs) at native grid resolutions (typically 100–250 km).
 
-[The CMIP6 climate projects are based on a monthly(?) temporal resolution and X km(??) spatial level, which is then indexed and merged using the the H3 indexing system.]{.mark} 
-
-
-### H3 Spatial Indexing System
-
-Microdata and hazard data are spatially linked using the [H3 spatial indexing system](https://h3geo.org), which maps survey locations to hexagonal grid cells shared with the weather and events data.
-
-For analysis for the WISE-APP process, much depends on the spatial granularity of the survey data, and how it is matched to historical and future weather through the H3 indexing system. As stated in the earlier caveat, one should analyze carefuly the extend to which weather data successfully merged with household data throught the H3 indexing process, as the completeness of this process (and the spatial granularity used) will majorly impact the results of the WISE-APP modeling process.
-
-
-## Data sources
-
-[NOTE: Perhaps data sources section should be depreciated or just kept to for the list components?]{.mark}
-
-The following data sources are currently included in WISE-APP:
-
-### Global Monitoring Database (GMD)
-The following surveys from GMD are currently available in WISE-APP, with more to be added in future releases.:
-*Add drop down list of surveys here based on `survey_list.csv`*
-
-
-### ERA5-Land climate reanalysis
-WISE-APP uses monthly aggregates of selected ERA5-Land variables, spatially indexed by H3 cells. 
-*Add drop down with list of weather variables available*
-
-### CMIP6 climate projections
-
-WISE-APP applies a delta method to perturb historical weather observations using CMIP6 change fields, producing future weather scenarios that reflect both historical variability and projected climate change. The same set of weather variables is available for both historical and future simulations.
-
-[Note: Is there a list that we want to include here - or any other information? I have found that not every simulation has each weather variable for each time/location - some are dropped. May be worth noting somewhere]{.mark}
+WISE-APP employs the standard **delta method** to perturb historical ERA5-Land baseline observations using the projected monthly change fields from each CMIP6 model. This approach preserves the fine-scale spatial and temporal variability of historical observations while shifting the distribution according to projected climate trajectories across ensemble models.
 
 ## Directory Structure
 
@@ -99,65 +113,61 @@ data/
         └── probabilistic/{code}/
 ```
 
-`{code}` is the ISO 3166-1 alpha-3 country code (e.g. `GNB`, `NGA`, `ETH`).
-
-The data directory can be stored locally or on a supported remote file system: AWS S3, Google Cloud Storage, Azure Data Lake, Hugging Face, or Databricks.
+`{code}` is the ISO 3166-1 alpha-3 country code (e.g., `GNB`, `NGA`, `ETH`).
 
 ## Metadata
 
-Three small CSV files are loaded once when WISE-APP connects to the data directory. They drive UI filtering, variable labelling, and monetary comparability adjustments.
+Three CSV files are loaded when WISE-APP initializes. They drive UI filtering, variable labeling, and monetary conversions.
 
 ### `survey_list.csv`
 
-One row per survey–level combination for which a microdata file exists.
+Catalogs every survey round and observation level available in the microdata repository:
 
 | Column | Type | Description |
-|--------|------|-------------|
-| `economy` | string | Economy name |
-| `code` | string | Country code |
-| `year` | integer | Starting year of survey |
-| `survname` | string | Survey acronym (e.g. `EHCVM`, `LSMS`) |
-| `level` | string | Unit of observation: `hh`, `ind`, or `firm` |
-| `obs` | integer | Number of observations |
-| `source` | string | Data source |
+|---|---|---|
+| `economy` | string | Economy / country name |
+| `code` | string | ISO 3166-1 alpha-3 country code |
+| `year` | integer | Survey implementation year |
+| `survname` | string | Survey acronym (e.g., `EHCVM`, `LSMS`, `HIES`) |
+| `level` | string | Unit of observation: `hh` (household), `ind` (individual), or `firm` |
+| `obs` | integer | Total number of observations |
+| `source` | string | Harmonization source (e.g., `GMD`) |
 
 ### `variable_list.csv`
 
-One row per variable. Controls which variables appear in the UI, how they are labelled, and how they are used in modelling.
+Catalogs all microdata variables and specifies their role and treatment in the modeling interface:
 
 | Column | Type | Description |
-|--------|------|-------------|
-| `name` | string | Variable name as it appears in the microdata |
-| `label` | string | Human-readable label shown in the UI |
-| `type` | string | R data type: `numeric`, `integer`, `logical`, `factor`, `character`, `Date` |
-| `units` | string | Unit of measurement (e.g. `LCU/day`, `years`, `mm`) |
-| `id` | binary | 1 if ID, date, or other special variable |
-| `outcome` | binary | 1 if outcome of interest |
-| `hazard` | binary | 1 if hazard/weather variable |
-| `ind` | binary | 1 if measured at individual level |
-| `hh` | binary | 1 if measured at household level |
-| `firm` | binary | 1 if measured at firm level |
-| `area` | binary | 1 if measured at area level |
-| `interact` | binary | 1 if available as an interaction term in the model |
-| `fe` | binary | 1 if available as a fixed effect in the model |
-
-The following variables must be present: `code`, `economy`, `year`, `survname`, `int_year`, `int_month`, `loc_id`, `h3`, `timestamp`, at least one outcome variable, and at least one hazard variable.
+|---|---|---|
+| `name` | string | Variable name in microdata files |
+| `label` | string | Human-readable label displayed in the UI |
+| `type` | string | Data type: `numeric`, `integer`, `logical`, `factor`, `character`, `Date` |
+| `units` | string | Unit of measurement (e.g., `LCU/day`, `years`, `mm`) |
+| `id` | binary | 1 if identifier, date, or administrative variable |
+| `outcome` | binary | 1 if variable can serve as a dependent welfare outcome |
+| `hazard` | binary | 1 if weather or climate hazard metric |
+| `ind` | binary | 1 if available in individual-level data |
+| `hh` | binary | 1 if available in household-level data |
+| `firm` | binary | 1 if available in firm-level data |
+| `area` | binary | 1 if measured at the geographic/community level |
+| `interact` | binary | 1 if available as a policy/resilience interaction term |
+| `fe` | binary | 1 if available as a fixed effect in regression models |
 
 ### `cpi_ppp.csv`
 
-One row per country–year–data level. Used to convert welfare aggregates from local currency units to comparable 2021 PPP USD.
+Provides deflators and purchasing power parity (PPP) conversion factors to convert monetary aggregates from nominal local currency units (LCU) to constant 2021 PPP USD:
 
 | Column | Type | Description |
-|--------|------|-------------|
-| `code` | string | Country code |
-| `year` | integer | Starting year of survey |
-| `data_level` | string | Geographic level of price data (e.g. `national`, `urban`, `rural`) |
-| `cpi` | numeric | Consumer price index |
-| `ppp2021` | numeric | PPP conversion factor relative to 2021 USD |
+|---|---|---|
+| `code` | string | ISO 3166-1 alpha-3 country code |
+| `year` | integer | Survey year |
+| `data_level` | string | Geographic level of price index (e.g., `national`, `urban`, `rural`) |
+| `cpi` | numeric | Consumer Price Index deflator |
+| `ppp2021` | numeric | 2021 PPP conversion factor relative to USD |
 
 ## Microdata
 
-All microdata files are in **Parquet format**, named `{code}_{year}_{survname}_{source}_{level}.parquet` and stored under `microdata/{level}/{code}/`. For example:
+Microdata files are stored in Apache Parquet format under `microdata/{level}/{code}/` following the naming convention `{code}_{year}_{survname}_{source}_{level}.parquet`:
 
 ```
 microdata/hh/GNB/GNB_2018_EHCVM_GMD_hh.parquet
@@ -166,77 +176,72 @@ microdata/firm/GNB/GNB_2018_EHCVM_GMD_firm.parquet
 microdata/h3/GNB/GNB_2018_EHCVM_GMD_h3.parquet
 ```
 
-All microdata files must include: `code`, `economy`, `year`, `survname`, `int_year`, `int_month`, `loc_id`, and at least one outcome variable.
+All microdata files share standard identifiers: `code`, `economy`, `year`, `survname`, `int_year`, `int_month`, `loc_id`, plus relevant thematic attributes.
 
-### Household file — `_hh.parquet`
+### Household file (`_hh.parquet`)
 
-One row per household. Key columns include `hhid`, `welfare` (welfare per day), `hhsize`, interview date fields, and spatial unit `loc_id`.
+One row per surveyed household. Key columns include:
 
-### Individual file — `_ind.parquet`
+- `hhid`: Unique household identifier within the survey.
+- `welfare`: Household welfare measure (consumption or income in LCU/day, converted to 2021 PPP USD in modeling).
+- `hhsize`: Number of household members.
+- `loc_id`: Unique location code linking to the spatial H3 lookup.
+- Resilience and asset indicators: electricity access, water source, dwelling characteristics, education of household head, etc.
 
-One row per individual. Key columns include `hhid`, `pid`, `wage` (wage per day), `age`, interview date fields, and `loc_id`.
+### Individual file (`_ind.parquet`)
 
-### Firm file — `_firm.parquet`
+One row per individual member. Key columns include `hhid`, `pid` (person identifier), `wage` (earnings in LCU/day), `age`, `gender`, `education`, `employment_status`, and `loc_id`.
 
-One row per firm. Key columns include `fid`, `revenue` (revenue per day), `employees`, interview date fields, and `loc_id`.
+### Firm file (`_firm.parquet`)
 
-### H3 lookup file — `_h3.parquet`
+One row per enterprise. Key columns include `fid` (firm identifier), `revenue` (daily revenue in LCU/day), `employees`, `sector`, and `loc_id`.
 
-One row per H3 cell per location. This is the **spatial bridge** between microdata and all hazard data — a single H3 file covers both `_hh.parquet` and `_ind.parquet` from the same survey. Required columns are `code`, `year`, `survname`, `loc_id`, and `h3`. The optional `pop_2020` column (GHS-POP 2020 population) is used to weight hazard variables within locations when available.
+### H3 Spatial Lookup file (`_h3.parquet`)
 
-H3 cell indices are stored as hexadecimal strings (e.g. `8928308280fffff`) but are 64-bit integers under the hood. Cell resolution is not fixed — merges are performed across resolutions using H3 parent/child relationships.
+Maps survey clusters (`loc_id`) to H3 hexagonal cells. A single lookup file covers all microdata levels from the same survey:
+
+- Required columns: `code`, `year`, `survname`, `loc_id`, and `h3` (hexadecimal H3 index string).
+- Optional column: `pop_2020` (GHS-POP 2020 population count), used to weight weather aggregations when a survey cluster spans multiple H3 cells.
 
 ## Hazard Data
 
-All hazard files are in **Parquet format**, spatially indexed using H3 cells and temporally indexed at monthly resolution. The H3 index is the join key to the `_h3.parquet` lookup, which maps H3 cells to `loc_id` in the microdata.
+Hazard datasets are stored in Parquet format, spatially indexed by H3 hexagon cells and temporally indexed at monthly resolution to align with microdata interview dates (`timestamp`, formatted as the first day of the month).
 
-### Weather — Historical
+### Historical Weather
 
-Stored under `hazard/weather/historical/{code}/`. One row per H3 cell per month, covering the full historical record of the source dataset.
+Stored under `hazard/weather/historical/{code}/{code}_{source}.parquet` (e.g., `GNB_era5land.parquet`).
 
-Filename: `{code}_{source}.parquet` — e.g. `GNB_era5land.parquet`, `GNB_chirps3.parquet`.
+Key variables include:
 
-Key columns: `h3`, `timestamp` (first day of month), plus weather variables such as `t` (monthly temperature °C), `tx` (daily maximum temperature °C), `spei6` (6-month SPEI), and others.
+- `t`: Monthly mean temperature (°C).
+- `tx`: Monthly mean of daily maximum temperatures (°C).
+- `tp`: Total monthly precipitation (mm).
+- `spei1`, `spei3`, `spei6`, `spei12`: Standardized Precipitation-Evapotranspiration Index at 1-, 3-, 6-, and 12-month horizons.
 
-### Weather — Projected
+### Climate Projections
 
-Stored under `hazard/weather/projections/{code}/`. Same schema as historical weather, plus a `model` column for multi-model ensembles (e.g. CMIP6).
-
-Filename: `{code}_{source}_{scenario}.parquet` — e.g.:
+Stored under `hazard/weather/projections/{code}/{code}_{source}_{scenario}.parquet`:
 
 ```
-GNB_cmip6_historical.parquet   # historical simulation (1950–2014)
-GNB_cmip6_ssp245.parquet       # SSP 2-4.5 (2015–2100)
-GNB_cmip6_ssp370.parquet       # SSP 3-7.0 (2015–2100)
-GNB_cmip6_ssp585.parquet       # SSP 5-8.5 (2015–2100)
+GNB_cmip6_historical.parquet   # CMIP6 historical baseline (1950–2014)
+GNB_cmip6_ssp245.parquet       # CMIP6 SSP 2-4.5 (2015–2100)
+GNB_cmip6_ssp370.parquet       # CMIP6 SSP 3-7.0 (2015–2100)
+GNB_cmip6_ssp585.parquet       # CMIP6 SSP 5-8.5 (2015–2100)
 ```
 
-The historical scenario covers 1950–2014 and the SSP scenarios cover 2015–2100. These are used together to compute climate change deltas applied in the Simulate Welfare step.
+In projection files, an additional `model` column identifies each climate model within the CMIP6 ensemble.
 
-### Events
-
-
-::: {.callout-warning}
-## Extreme Events
-Historical and probabilistic event data (e.g. floods, cyclones) are planned for a future release. Historical event files will contain one row per H3 cell per discrete event; probabilistic files will contain one row per H3 cell per return period.
+::: {.callout-note appearance="simple"}
+### Extreme Events (Future Release)
+Modules for historical and probabilistic extreme events (e.g., riverine floods, tropical cyclone return periods) are planned for future releases of WISE-APP.
 :::
-
-
-
-
 
 ## Spatial Integration: H3
 
-WISE-APP uses the [H3 spatial indexing system](https://h3geo.org) to flexibly join microdata and hazard data:
+WISE-APP links household survey microdata and gridded climate datasets using Uber's [H3 Spatial Index](https://h3geo.org), an open-source discrete global grid system based on hexagonal partitions:
 
-- Survey microdata files include `loc_id` (unique spatial unit), `int_year`, and `int_month`.
-- H3 lookup files map each `loc_id` to one or more H3 hexagon cell IDs.
-- Hazard files include `h3` and `timestamp`, matched to survey locations and interview dates via the H3 lookup.
+- **Point / Cluster Geocoding:** Household survey sampling clusters (`loc_id`) are mapped to one or more H3 hexagons at the appropriate resolution.
+- **Gridded Hazard Resampling:** Gridded weather datasets (ERA5-Land, CMIP6) are indexed onto the same H3 cell grid.
+- **Flexible Joins Across Scales:** Multi-resolution spatial joins are handled efficiently via H3 parent–child hierarchical relationships.
 
-One or more survey observations are mapped to a spatial unit `loc_id`, which is represented by one or more H3 hexagons. Merges across H3 resolutions are handled using H3 parent/child relationships.
-
-![H3 spatial mapping](images/locations.png)
-
-
-
----
+![H3 Spatial Mapping of Survey Locations to Climate Hexagons](images/locations.png)

@@ -39,7 +39,7 @@ Practical guidance for selecting model inputs, transformations, and interpreting
 :::
 
 ::: {.callout-warning appearance="simple"}
-### Methodological Caveat
+### Analytical Caveat
 Important analytical boundaries and model assumptions to keep in mind.
 :::
 

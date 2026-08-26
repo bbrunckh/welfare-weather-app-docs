@@ -34,46 +34,51 @@ On startup, the **Overview** landing page provides an interactive **Data** conne
 - **Databricks:** Workspace URL, Databricks Volume path (`/Volumes/...`), and OAuth M2M credentials.
 
 ::: {.callout-tip appearance="simple"}
-### Analytical Tip: Environment Credentials
+### Environment Credentials
 Credential fields in the UI are optional if credentials are pre-configured in your local `.Renviron` file (e.g., `AWS_ACCESS_KEY_ID`, `AZURE_STORAGE_KEY`, `DATABRICKS_HOST`, etc.).
 :::
 
 ::: {.callout-note appearance="simple"}
 ### Data Preparation Repository
-The data processing pipelines used to clean, harmonize, and spatially index microdata and hazard layers are maintained in the [welfare-weather-app-data](https://github.com/worldbank/welfare-weather-app-data){target="_blank"} repository.
+The data processing pipelines used to clean, harmonize, geocode, and spatially index microdata and hazard layers are maintained in the [welfare-weather-app-data](https://github.com/worldbank/welfare-weather-app-data){target="_blank"} repository.
 :::
 
 ## Data Sources & Methodology
 
-This section describes the data sources prepared for the web app. 
-
 ### Household Survey Microdata (GMD)
 
-Socioeconomic data are drawn from the World Bank’s Global Monitoring Database (GMD), a repository of harmonized multi-topic household surveys. GMD provides standardized consumption aggregates, poverty measures, and demographic indicators across countries and survey rounds.
+Socioeconomic data are drawn from the World Bank’s **Global Monitoring Database (GMD)**, a harmonized collection of nationally representative multi-topic household surveys covering over 150 low- and middle-income countries across more than 2,000 survey waves from 1989 to the present. GMD provides standardized consumption aggregates, poverty measures, and demographic indicators.
+
+WISE-APP uses a curated subset of GMD surveys that have been enhanced with standardized geocodes, interview timestamps (`int_year`, `int_month`), and spatial variables. This provides the consistent spatial-temporal key needed to merge household records with gridded climate data. Additional GMD survey rounds are processed and added to the repository over time.
+
+In the analytical workflow:
+
+- **Step 1 (Model Welfare):** Pools all available survey waves within an economy (a repeated cross-section with location fixed effects) to maximize sample size and climate variation for estimating the weather–welfare relationship.
+- **Step 2 (Climate Scenarios) & Step 3 (Policy Scenarios):** Use the most recent available survey wave in each country as the baseline population for stress-testing and counterfactual simulations.
 
 ::: {.callout-warning appearance="simple"}
-### Analytical Caveat: Survey Design & Variance Estimation
-While survey sampling weights are applied during reporting to ensure representativeness, GMD does not harmonize full complex survey design parameters (such as primary sampling units, strata, and clusters). Consequently, standard errors estimated by the regression models may be underestimated. The inclusion of spatial fixed effects partially mitigates this issue, but uncertainty intervals should be interpreted with appropriate caution.
+### Survey Design & Variance Estimation
+While survey sampling weights are applied during estimation to ensure representativeness, GMD does not harmonize full complex survey design parameters (such as primary sampling units, strata, and clusters). Standard errors are cluster-robust at the location level (`loc_id`), but may understate true sampling variance if multi-stage sampling effects are strong.
 :::
 
 ::: {.callout-warning appearance="simple"}
-### Analytical Caveat: Spatial & Temporal Granularity
-Accurate linking with weather data depends on the precision of interview dates and geolocation. When survey data are anonymized to broad administrative regions (e.g., province or governorate) or coarse time intervals (e.g., quarter of interview), the spatial and temporal variation in weather shocks is smoothed out, reducing statistical power and attenuation toward zero.
+### Spatial & Temporal Granularity
+Surveys exhibit substantial variability in temporal and geographic precision. Some surveys conduct interviews rolling across all 12 calendar months with granular GPS coordinates representing thousands of distinct clusters. Others are conducted over only a few months or are anonymized to coarse administrative units (e.g., province or region). When interview dates or locations are aggregated coarsely, high-frequency localized weather shocks are smoothed out, which reduces statistical power and can attenuate estimated coefficients toward zero.
 :::
 
 ::: {.callout-tip appearance="simple"}
-### Analytical Tip: Variable Coverage & Missing Data
-Beyond core demographic and consumption variables, the availability of resilience proxies (e.g., electricity access, education, assets) varies across surveys. When using automated selection algorithms like LASSO in Step 1, variables with high missing rates (>10%) are excluded by default. It is strongly recommended to review survey statistics prior to modeling to verify that key variables are not systematically missing for vulnerable sub-populations.
+### Variable Coverage & Missing Data
+Beyond core demographic and consumption variables, the availability of resilience proxies (e.g., electricity access, education, assets) varies across surveys. When using automated selection algorithms like LASSO in Step 1, variables with high missing rates (>10%) are excluded by default. Review the **Survey stats** tab prior to modeling to verify that key variables are not systematically missing for vulnerable sub-populations.
 :::
 
 ### Historical Weather Reanalysis (ERA5-Land)
 
 Historical weather data are obtained from **ERA5-Land**, a global climate reanalysis produced by the European Centre for Medium-Range Weather Forecasts (ECMWF). ERA5-Land combines physical modeling with global in-situ and satellite observations to provide consistent, hourly estimates of meteorological variables at a ~9 km spatial resolution from 1950 to the present.
 
-For WISE-APP, ERA5-Land variables are aggregated to monthly summaries (e.g., mean temperature, precipitation sums, standardized anomalies) and spatially mapped onto H3 hexagonal cells.
+For WISE-APP, ERA5-Land variables are aggregated to monthly summaries (e.g., mean temperature, precipitation sums, standardized anomalies) and spatially mapped onto H3 hexagonal cells to align with survey interview months.
 
 ::: {.callout-warning appearance="simple"}
-### Analytical Caveat: Local Variation and Fixed Effects Identification
+### Local Variation & Fixed Effects Identification
 A regression model with spatial and temporal fixed effects identifies weather impacts solely from *within-location* and *within-time* deviations from local baselines. If a country or survey sample exhibits little localized weather variation across interview dates, the model cannot identify meaningful statistical relationships.
 :::
 

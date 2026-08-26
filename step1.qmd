@@ -4,268 +4,204 @@ title: "Step 1: Model Welfare"
 
 ## Overview
 
-This step establishes the statistical relationship between weather and welfare outcomes. It forms the foundation for all subsequent simulation and policy analysis. Users select their survey and weather data, specify a welfare outcome, choose weather variables, and configure a model that quantifies how weather affects welfare and how that relationship varies across population groups.
+Step 1 establishes the empirical relationship between local weather anomalies and socioeconomic welfare outcomes. The fitted regression models quantify how weather shocks affect welfare on average and across population sub-groups, forming the statistical foundation for the simulations in [Step 2 (Climate Scenarios)](step2.qmd) and [Step 3 (Policy Scenarios)](step3.qmd).
 
-## Analytical Caveats
+The workflow follows four interactive panels in the application sidebar:
 
-As stated elsewhere, while grounded in best-practices, the results of the WISE-APP tool are **indicative** and based on a model which estimates the impact of direct, localized, and high-frequency weather variability on an outcome of interest (typically household welfare). 
+1. **Sample:** Select analysis level, economies, and survey rounds; inspect sample statistics and spatial coverage.
+2. **Outcome:** Choose and configure dependent welfare outcomes (consumption, poverty status).
+3. **Weather:** Select weather variables and configure reference periods, temporal aggregations, and non-linear transformations.
+4. **Model:** Specify model types, policy scenario interactions, fixed effects, and covariate selection methods, then estimate the regressions.
 
-As will be detailed in this section, the model is highly dependent on the coverage, quality, and granularity of the underlying data, and the assumptions made in the modelling process. Furthermore, this methodology **does not** predict extreme tail-risk events (as those are rare and likely not well-represented in the underlying data), or estimate indirect-impacts of weather through broader non-locally defined associations (such as national or regional markets, or hydrology, unless those variables are explicitly included in the model). 
-
-Other major considerations include the transformation of weather variables, which should be chosen to reflect the relevant seasonal and local dynamics of the country of interest (e.g. in an arid climate very little amount and variation in rainfall may be observed, so that may not be a useful variable; in a country with a strong agricultural sector, specifying rainfall occuring during the growing season may be more relevant than rainfall during the last month, etc.). These transformations will have major impact on the model specification and hence results.
-
-[Additionally, one should also note that the use of spatial and temporal fixed effects in the model will remove any variation in weather that is common across locations or time periods, so that the model is estimating the impact of *within-location* and *within-time* variation in weather on welfare. This is a key consideration for interpreting results, as it may be that the most relevant variation in weather for welfare outcomes is not captured by this approach. Furthermore, it should also be noted that fixed effects approach at higher levels of aggregation (i.e. not household panel data) biases the estimation of the weather-welfare relationship towards zero through removing variation in weather that is common across locations or time periods.]{.mark} 
-
-## Interface
-
-![Model Welfare Interface](images/step1-screenshot.png)
-
-## Instructions
-
-### Sample Selection
-
-Select the **unit of analysis**: Individual, Household (default), or Firm. This determines which survey microdata are loaded and which variables are available in the model.
-
-Select the **country** of interest and the **survey years** available for each country. Click **Survey Stats** to generate summary statistics, interview location maps, and welfare distribution plots for the selected sample.
-
-::: {.callout-tip collapse="true"}
-### Analytical Tip
-
-The survey stats tab provides a wealth of information for each country-survey combination, including general prevalances and distribution of key variables (whether as a predictor or outcome), and spatial distribution of linked households. It is an important first step to understand the data and its limitations. Nevertheless, it is suggested that additional analytics are done outside the app to understand the dynamics and correlates of missing data (whether households unable to be matched to geographic coordinates, or households with incomplete survey data for key variables of interest) - as this may shape the interpretation of results.
+::: {.callout-warning appearance="simple"}
+### Local Weather Variation & Fixed Effects Identification
+The regression models employ spatial and temporal fixed effects to eliminate cross-sectional confounding. Consequently, coefficients are identified strictly from *within-location* and *within-time* deviations from local baselines. If a sample exhibits little localized weather variation across interview dates, the model cannot identify statistically meaningful impacts.
 :::
 
+## Interface Overview
 
-### Welfare Outcome
+![Step 1 Modelling Interface](images/step1-screenshot.png)
 
-Choose the welfare outcome to model:
+## Step-by-Step Instructions
 
-- **Continuous outcomes** — e.g. household consumption in $/day.
-- **Binary outcomes** — e.g. poverty status, defined against a specific poverty line.
+### 1. Sample Selection
 
-For monetary outcomes, select the **currency**:
+Configure the survey sample used for econometric estimation:
 
-- **PPP (2021)** (default) — expressed in 2021 international dollars, enabling cross-country comparison.
-- **LCU (2021)** — expressed in local currency units for 2021.
+- **Level of Analysis:** Choose between `Household` (default), `Individual`, or `Firm`. This determines which microdata files and variables are loaded.
+- **Economy:** Select one or up to two countries (e.g., Burkina Faso `BFA`, Ghana `GHA`).
+- **Survey Year:** Select available survey rounds for the chosen economies.
 
-If the selected outcome is poverty status (`poor`), specify the **poverty line**:
+Click **Survey stats** to load the data and open a diagnostic tab displaying summary tables, indicator distributions, and interactive H3 spatial coverage maps (including cluster locations and sample density).
 
-- Default: $3.00/day in PPP, or the 20th percentile of the welfare distribution in LCU.
-- The poverty line can be edited manually.
-
-::: {.callout-tip collapse="true"}
-### Analytical Tip
-
-Welfare outcomes are often one of the variables with 100% response rates, though other variables like labor-income, working hours per day, etc. may have significant missing data in some surveys.
-
-If using welfare data - be sure to check the distribution. The WISE-APP log-transforms consumption data for modeling, which can be an issue if the underlying welfare consumption data is already log-transformed!
-
+::: {.callout-warning appearance="simple"}
+### Spatial & Temporal Granularity
+Accurate linking between microdata and climate hazards depends on the precision of interview dates and geolocations. When survey data are anonymized to broad administrative regions (e.g., province or governorate) or coarse time intervals (e.g., interview quarter), high-frequency weather shocks are smoothed out, which can attenuate estimated coefficients toward zero and reduce statistical power.
 :::
 
-### Weather Variables
-
-Select up to two weather variables from the ERA5-Land dataset. For each variable, configure:
-
-- **Reference period** — how many months before the interview date the weather is measured (slider 0–12 months, default: 1 month). Choose a reference period that corresponds to the economic season most relevant to the survey population (e.g. the growing season for agricultural households).
-- **Temporal aggregation** — how weather is summarised across the reference period: Mean, Median, Min, Max, or Sum. Sum is the default for precipitation (mm) and event-count variables (days); Mean is the default for all others.
-- **Transformation** — how the aggregated value is expressed:
-  - *None* (default for most variables) — uses the raw aggregated value.
-  - *Deviation from mean* — subtracts the long-run average, capturing anomalous conditions relative to the local baseline.
-  - *Standardised anomaly* (default for dimensionless variables) — deviation divided by the long-run standard deviation; comparable across locations and time.
-- **Variable treatment**:
-  - *Binned* (default) — converts the weather variable into quantile categories. Flexible and does not impose a functional form; recommended when the relationship may be non-linear or when you are unsure of the functional form.
-  - *Continuous* — enters the variable as a numeric term, optionally with quadratic or cubic polynomial expansions.
-
-Click **Weather Stats** to generate summary statistics and diagnostic plots for the selected weather variables.
-
-::: {.callout-tip collapse="true"}
-### Analytical Tip
-
-This Weather Transformation step is one of the most important steps in the entire WISE-APP modeling process, and should be carefully considered with expert knowledge of the local climate and economic context. 
-
-**Reference Period**: is one month before the survey the most relevant for the welfare outcome of interest? Or is it better to aggregate over the prior year? After selecting, we recommend running with multiple specifications to assess the robustness of results. In future updates, we will allow for the reference period to be specified as a range of particular months that may link to a particular economic season (e.g. the growing season for agricultural households). 
-
-**Temporal Aggregation**: There are likely default specifications for each weather variable of interest. However, this does structure the model estimation process - is one interested in the number of days in a month that exceeded a temperature threshold, or the average temperature over the month? Which is more important depends on the local climate and economic context and shapes findings.
-
-[**Transformation**: The default is to use the deviation from mean or standardised anomaly, which captures anomalous conditions rather than absolute weather levels. Use the deviation-from-mean or standardised anomaly transformation when you want to capture anomalous conditions rather than absolute weather levels. This is particularly useful when comparing results across regions with different climates. Nevertheless, it is recommended to run this both transformed and untransformed not only to assess robustness of results, but ease interpretability when understanding and communicating results.]{.mark} 
-
-[**Variable Treatment**: One can decide to 'bin' weather variables into quantiles - which helps capture non-linear effects in weather data, or to use continuous variables (with optional polynomial expansions). While continuous and polynomial expansions are used in the literature, we recommend using binned weather variables as the default, and comparing with continous as a robustness check. Continuous variables with polynomial expansions can have extreme tails, which can be problematic for interpretation and simulation.]{.mark} 
+::: {.callout-tip appearance="simple"}
+### Start with Survey Stats
+Before modeling, review the **Survey stats** tab to verify sample sizes, check for systematic geographic gaps, and understand missing data rates across candidate variables.
 :::
 
+### 2. Welfare Outcome
 
+Define the dependent variable ($y_{ijt}$) for the regression:
 
-### Model Specification
+- **Continuous Outcomes:** Household consumption or income per capita per day.
+- **Binary Outcomes:** Poverty status indicator (`poor`) or other binary welfare metrics.
+- **Currency:** For monetary aggregates, choose between:
+  - **PPP (2021)** (default) — constant 2021 international dollars, enabling cross-country comparability.
+  - **LCU (2021)** — local currency units.
+- **Poverty Line:** When modeling poverty status, specify the poverty threshold (default: $3.00/day in 2021 PPP USD, or the 20th percentile of the sample distribution in LCU).
 
-Configure the regression model:
+Click **Outcome stats** to inspect the outcome distribution, Lorenz curves, and poverty rates across survey waves.
 
-#### Model type
-
-::: {.callout-warning}
-## RIF regression
-
-The Distributional regression (RIF) is currently under revision and not yet available for use in the current version of the WISE-APP tool.
+::: {.callout-tip appearance="simple"}
+### Check the Welfare Distribution
+WISE-APP applies a logarithmic transformation to continuous monetary consumption variables during estimation. Ensure raw consumption values are positive and not pre-log-transformed in the source data.
 :::
 
-- **Continuous outcomes** — choose between:
-  - **Linear regression** (default) — estimates the effect of weather on the *average* welfare outcome. A single coefficient per weather variable summarises the relationship across the entire welfare distribution.
-  - **Distributional regression (RIF)** — estimates the effect of weather on specific *quantiles* of the welfare distribution (10th through 90th percentile). Recommended when you want to assess whether weather impacts are concentrated among the poor, or when Step 3 will evaluate social protection or cash transfer programmes. See the [Statistical Methods](#statistical-methods) section for details.
-- **Binary outcomes** — choose between linear regression (a linear probability model) or logistic regression. Logistic regression coefficients are log-odds ratios; linear probability model coefficients are marginal effects on the probability of the binary outcome.
+### 3. Weather Variables & Transformations
 
+Select up to two weather variables from ERA5-Land reanalysis (e.g., Mean Temperature `t`, Precipitation `tp`, Drought Index `spei6`).
 
-#### Three progressive models
+Click **Configure** beside each selected variable to open the configuration flyout:
 
-WISE-APP fits three nested models of increasing complexity. The results tab shows all three, allowing you to assess how much explanatory power each component adds:
+- **Reference Period Range:** A slider selecting the window of months before the interview date to measure (0 to 12 months, default: `1 to 1`). This allows capturing specific agricultural growing windows or seasonal shocks.
+- **Temporal Aggregation:** Summary function across the reference period:
+  - `Mean` (default for temperatures and continuous metrics)
+  - `Sum` (default for precipitation `tp` and event counts)
+  - `Median`, `Min`, `Max`
+- **Transformation:**
+  - *None:* Raw aggregated value in physical units (°C, mm).
+  - *Deviation from mean:* Subtracts the long-run local historical average (1991–2020), measuring anomalous weather conditions relative to the location's baseline.
+  - *Standardised anomaly:* Deviation divided by the historical standard deviation, yielding dimensionless, unit-free standardized shocks comparable across regions.
+- **Variable Treatment:**
+  - *Binned:* Converts the weather variable into categorical bins. Binned specifications do not impose parametric functional forms and capture non-linear effects:
+    - `Equal frequency` (quantiles, default)
+    - `Equal width`
+    - `K-means` clustering
+    - `Custom` comma-separated break points
+  - *Continuous:* Enters the numeric variable directly, with optional `Quadratic` ($X^2$) or `Cubic` ($X^3$) polynomial expansion terms.
+- **Historical Comparison Settings:** Configure the reference climate baseline period (default: 1991–2020) used for computing anomalies and historical distributions.
 
-1. **Weather only** — the raw weather-welfare relationship, without controls.
-2. **Weather + fixed effects** — adds location and time fixed effects to remove confounding from spatial and temporal heterogeneity.
-3. **Full model** — adds household, individual, area, or firm-level covariates on top of (2).
+Click **Weather stats** to generate weather time series, spatial maps, and historical distributions merged with household survey observations.
 
-#### Interactions
-
-Select up to one variable to interact with the weather terms. The default is `urban` (urban/rural) if present in the survey. Interactions identify whether the weather-welfare relationship differs across population groups — a key input for the Step 3 policy analysis.
-
-**Interaction mode**:
-
-- **Saturated** (default) — all selected moderators are crossed simultaneously: $W \times M_1 \times M_2$. Use when you want to estimate joint moderation effects.
-- **Pairwise** — each moderator is crossed with weather independently: $W \times M_1$ and $W \times M_2$. Use when moderators are conceptually independent or when the saturated model becomes too sparse.
-
-[Note: Perhaps we want an interpretation here?]{.mark}
-
-#### Fixed effects
-
-Select one or more variables to absorb as fixed effects. Defaults to survey year and admin region (`gaul1_code`) if available. Fixed effects remove unobserved heterogeneity at the selected level without estimating explicit coefficients for each category.
-
-[Note: Perhaps we want an interpretation here?]{.mark}
-
-
-#### Covariate selection
-
-- **User-defined** (default) — manually select control variables, organised by role: household-level, individual-level, area-level, and firm-level. Variables already used as the outcome, weather terms, interaction variable, or fixed effects are excluded automatically.
-- **LASSO** — automated stability selection using multiple imputation (default: 5 imputations) and cross-validated LASSO (10 folds). Only variables selected in more than 50% of imputation runs (the stability threshold) are retained. A standard regression is then re-fitted on the selected variables. Recommended when the covariate list is long or when you want a data-driven approach to reduce overfitting. It is possible to select variables that **must** be included in the model, while running LASSO selection for the remaining variables.
-
-::: {.callout-tip collapse="true"}
-### Analytical Tip
-
-It is recommended to run multiple specifications to determine the final function variable set. In particular, one should run with LASSO selection to determine the most important covariates and general performance, comparing that to the performance of a user-defined covariate set (or a defined set with LASSO selection for remaining covariates) to be sure of not overfitting.
-
- [Note (from earlier 3.5 'Tips and Common Issues - Delete?' If using LASSO covariate selection, review the selection frequency output to understand which variables were consistently selected across imputation runs.]{.mark}
+::: {.callout-tip appearance="simple"}
+### Choosing Weather Transformations
+Binned or anomaly transformations are recommended for cross-country and multi-region comparisons. When using continuous polynomial expansions, inspect diagnostic plots to ensure extreme observations at the tails are not driving artifactual curvature.
 :::
 
-#### Regression engine
+### 4. Model Specification & Estimation
 
-Linear regression and distributional regression (RIF) are both estimated using a high-dimensional fixed effects estimator that handles large numbers of fixed effect categories — thousands of locations or survey waves — without expanding them into explicit dummy variables. Standard errors are cluster-robust at the location level by default.
+Configure the regression specification and variable controls:
 
-Advanced users can switch to non-parametric engines:
+#### Model Type
 
-::: {.callout-warning}
-## Non-parametric modeling
+- **Linear Regression:** Fits an ordinary least squares model with high-dimensional fixed effects (`fixest::feols`). Estimates the average marginal effect of weather shocks on welfare.
+- **Logistic Regression:** Fits a generalized linear model with fixed effects (`fixest::feglm`) for binary outcomes. Coefficients represent log-odds ratios.
+- **Quantile Regression (RIF):** Fits unconditional quantile regressions via Recentered Influence Functions, estimating how weather impacts specific quantiles ($\tau = 0.1, 0.2, \dots, 0.9$) across the welfare distribution.
 
-Non-parametric engines are currently under development and not yet available for use in the current version of the WISE-APP tool
+::: {.callout-note appearance="simple"}
+### Distributional Regression (RIF) & Non-Parametric Models
+RIF quantile regression and non-parametric machine learning engines (Random Forest, XGBoost) are currently under active development.
 :::
 
-- **Random forest** — non-parametric, handles non-linearities and interactions automatically; available for continuous outcomes only; does not produce interpretable coefficients.
-- **Gradient-boosted trees** — similar to random forest; available for continuous and binary outcomes.
+#### Policy Scenarios & Interaction Terms
 
-Machine learning engines are suited for predictive accuracy rather than causal inference, as their outputs cannot be directly interpreted as marginal effects.
+In the sidebar, you can select pre-defined **Policy Scenarios** (e.g., *Energy / Electricity access*, *Improved water access*, *Internet access*, *Educational attainment*). Selecting a policy automatically locks the corresponding survey variable as an interaction term ($\text{Haz}_{kt} \times \text{Policy}$) in the regression model.
 
-### Interpreting Results
+Alternatively, you can manually select an interaction moderator (default: `urban`), testing whether weather sensitivity differs between rural and urban households or across population sub-groups.
 
-After clicking **Run model**, the results tab appears with three panels, and a model fit tab with additional diagnostics.:
+#### Model Settings Flyout
 
-::: {.callout-caution collapse="true"}
-## Section focus on OLS
-Differing model selection options (OLS, logistic, RIF, etc.) will provide different visualizations on the results tab. This section focuses on the presentation using an OLS model.
+Click **Model settings** to configure advanced regression options:
+
+- **Fixed Effects:** Select categorical variables to absorb (defaults to survey wave `year` and administrative region `gaul1_code`). Fixed effects remove unobserved spatial and temporal heterogeneity via within-group demeaning.
+- **Covariate Selection:**
+  - **User-Defined:** Manually select control variables organized by level (Individual, Household, Firm, Area). Variables selected as outcomes, weather terms, interactions, or fixed effects are automatically excluded from the candidate lists.
+  - **LASSO Stability Selection:** Automated variable selection across multiple imputations (5 imputations, 10-fold cross-validation). Variables with more than 10% missing values are excluded, and candidate variables selected in at least 50% of imputation iterations are retained in the final model. Supports forced inclusion and exclusion lists.
+
+Click **Run model** to estimate the regressions.
+
+::: {.callout-warning appearance="simple"}
+### Survey Design & Standard Errors
+While survey sampling weights are applied during estimation to ensure population representativeness, GMD harmonized surveys do not include full complex design parameters (strata and primary sampling units). Standard errors are cluster-robust at the location level (`loc_id`), but may understate true sampling variance if complex multi-stage sampling effects are strong.
 :::
 
-**Results Tab**:
-
-- **Predicted outcome vs weather** — partial dependence plots showing the marginal relationship between each weather variable and the outcome, holding other covariates at their observed values. When interactions are specified, separate lines are shown for each moderator group.
-- **Marginal effect of weather** — coefficient plot with confidence intervals for all three progressive models. Compare across models to assess robustness: large changes from model (1) to model (3) suggest confounding; stability across models increases confidence in the estimated weather effect.
-- **Regression results** — full coefficient table. Relative importance bars show each variable's percentage contribution to in-sample fit (R²).
-
-::: {.callout-tip collapse="true"}
-### Analytical Tip
-- A weather coefficient that is significant in model (1) but shrinks toward zero in model (2) suggests the raw effect partly reflects spatial or temporal confounding absorbed by the fixed effects.
-- Check whether interaction terms are statistically significant before using them in the Step 3 Policy Simulation component. Non-significant interactions will produce policy effects only through the intercept, not through changes in weather sensitivity.
-- A significant interaction term means the weather-welfare relationship is heterogeneous — some groups are more exposed or vulnerable. This heterogeneity is what Step 3 exploits to estimate policy impacts on resilience.
-- Low overall R² does not mean weather variables are unimportant; welfare outcomes have many determinants. Focus on the significance and direction of the weather coefficients rather than overall fit.
-- If model fit is poor, consider whether the references periods selected aligns with the economic calendar of the survey population (e.g. harvest month vs. planting month for agricultural households).
+::: {.callout-tip appearance="simple"}
+### Comparing Variable Selection Approaches
+Run a LASSO model first to identify data-driven predictors, then compare the specification with a theory-grounded user-defined set to ensure robustness without overfitting.
 :::
 
+## Interpreting Model Outputs
 
-**Model Fit:**
-- **Fit Statistics** - short table showing key performance statistics for ease of reference
-- **Relative Importance of Predictors** - bar chart showing the relative contribution of each predictor to the overall model fit (R²)
-- **Predicted vs Actual Welfare** - bar plot showing the relationship between predicted and actual values, useful for assessing outcome predictions
-- **Residuals vs Fitted Plot** - scatter plot showing the relationship between residuals and fitted values, useful for assessing model fit and identifying potential outliers or heteroscedasticity
+Once estimation finishes, two dedicated output tabs are added to the interface:
 
-::: {.callout-tip collapse="true"}
-### Analytical Tip
-- Fit statistics shows a brief summary of performance statistics also accessible in the previous tab. Mainly for reference.
-- The relative importance of predictors chart shows how important an individual indicator component is in the *overall* model fit (R²). This can be very useful to indicate which variables are doing the most work in your model - and which are the most important to focus on for quality checks/missing, etc. Nevertheless, individual components contributions will vary in importance for particular hosuehold predictions.
-- [The predicted vs actual welfare plot is useful as an analysis of spread - important given the non-normal interactions of weather on welfare and the general concern with tails.]{.mark}
-- [NOTE: Maybe someone else has a better description: The residuals vs fitted plot can help analyze and understand bias at the tails, issues of outliers or heteroscedasticity.]{.mark}
+### Results Tab
+
+The **Results** tab presents three core analytical panels:
+
+1. **Predicted Response Curves:** Partial dependence plots showing predicted welfare across weather values, with separate curves for each interaction moderator group (e.g., electrified vs. non-electrified households).
+2. **Progressive Coefficient Plot:** Displays estimated coefficients and confidence intervals across three nested specifications to diagnose confounding:
+   - *Model 1 (Weather only):* Uncontrolled raw association.
+   - *Model 2 (Weather + Fixed Effects):* Controls for location and time heterogeneity.
+   - *Model 3 (Full Model):* Controls for fixed effects plus household and area characteristics.
+3. **Regression Summary Table:** Full estimation table reporting coefficients, standard errors, sample sizes, and goodness-of-fit metrics.
+
+::: {.callout-tip appearance="simple"}
+### Interpreting the Results Tab
+- A coefficient that is statistically significant in Model 1 but attenuates toward zero in Model 2 indicates that the raw correlation was driven by spatial or temporal confounding.
+- Check interaction term significance: significant interactions confirm that vulnerability is heterogeneous across sub-populations, which is the primary channel evaluated in Step 3.
 :::
 
+### Model Fit Tab
 
+The **Model fit** tab provides in-depth econometric diagnostics:
+
+- **Fit Statistics:** Summary table showing $R^2$, Within $R^2$ (variance explained beyond fixed effects), AIC, and BIC.
+- **Residuals vs. Weather:** Scatter plots of model residuals against weather variables to check for unmodeled non-linearities or remaining heteroskedasticity.
+- **Relative Predictor Importance:** Bar charts of standardized coefficients ($|\beta| \times \text{sd}(X)$), illustrating the relative explanatory contribution of each predictor.
+- **Predicted vs. Actual Welfare:** Distributional comparison of observed vs. fitted values.
+- **Diagnostic Plots:** Standard residual diagnostics (residuals vs. fitted, Q-Q plots) and raw model summary outputs.
+
+::: {.callout-tip appearance="simple"}
+### Reading the Model Fit Tab
+Low overall $R^2$ is common in microeconometric regressions of household welfare. Focus on the magnitude, stability, and statistical significance of the weather and interaction coefficients rather than total $R^2$.
+:::
 
 ## Statistical Methods Background {#statistical-methods}
 
-This section provides technical background on the regression methods available in Step 1. Users primarily interested in the workflow can skip ahead to Step 2; users who want to understand what the model estimates and how to interpret coefficients correctly will find this section useful.
+### High-Dimensional Fixed Effects Demeaning
 
-### Linear Regression
+Linear models in WISE-APP are estimated using high-dimensional fixed effects algorithms (`fixest::feols`). The estimation equation is:
 
-Linear regression with fixed effects estimates the effect of weather on the *average* welfare outcome, controlling for observed and unobserved heterogeneity.
+$$y_{ijt} = \beta \, \text{Haz}_{kt} + \theta \, M_{ijt} + \gamma \, (\text{Haz}_{kt} \times M_{ijt}) + \delta \, X_{ijt} + \alpha_j + \lambda_t + \varepsilon_{ijt}$$
 
-**What the coefficients mean.** A coefficient of −0.05 on a weather variable in a log-welfare model means a one-unit increase in that variable is associated with approximately a 5% reduction in expected welfare. This is an *average* effect across all households in the sample — it does not distinguish between impacts on poor and wealthy households unless interaction terms are explicitly specified.
+where:
 
-**Fixed effects.** The model can absorb large numbers of fixed effects — for example, a separate intercept for each survey location and each survey year — without estimating them as explicit coefficients. They are instead removed through within-group demeaning before estimation. The practical consequence is that the weather coefficient is identified from *within-group* variation: how does welfare in a given location change from year to year as weather varies, after removing permanent location-level differences in average wealth? This eliminates confounding from structural differences across regions.
+- $y_{ijt}$ is log-welfare for household $i$ in location $j$ at time $t$. Because the outcome is in logs, $\beta$ represents a semi-elasticity: a one-unit increase in $\text{Haz}_{kt}$ is associated with approximately a $100 \times \beta\%$ change in welfare.
+- $\text{Haz}_{kt}$ is the weather shock metric (temperature anomaly, rainfall sum, etc.).
+- $M_{ijt}$ is the interaction moderator (e.g., electricity access, urban status) with direct observational association $\theta$.
+- $\text{Haz}_{kt} \times M_{ijt}$ is the interaction term with coefficient $\gamma$, capturing differential weather vulnerability.
+- $X_{ijt}$ is a vector of household, individual, and area covariates with coefficients $\delta$.
+- $\alpha_j$ and $\lambda_t$ are spatial (e.g., district/region) and temporal (e.g., survey year) fixed effects absorbed via within-group demeaning.
+- $\varepsilon_{ijt}$ is the idiosyncratic error term with cluster-robust standard errors at the location level.
 
-**The three progressive models** reveal how much of the apparent weather-welfare relationship reflects genuine effects versus confounding:
-
-1. **Model 1** estimates a raw correlation between weather and welfare that may be inflated because poor regions also tend to have more extreme weather.
-2. **Model 2** adds fixed effects, removing cross-sectional confounding. A large reduction in the weather coefficient from Model 1 to Model 2 signals that confounding was important.
-3. **Model 3** further controls for observable household and area characteristics. Substantial change in the coefficient from Model 2 to Model 3 indicates that some of the apparent weather effect in Model 2 was mediated through or confounded with these observables.
-
-**Limitations.** Linear regression estimates a single average effect. If weather harms poor households more than wealthy ones — which is a central concern for climate adaptation — this heterogeneity is invisible to the model unless captured through explicit interaction terms. The estimates are also sensitive to extreme welfare observations at the tails of the distribution.
-
-### Distributional Regression (RIF)
-
-::: {.callout-warning}
-## RIF regression
-
-The Distributional regression (RIF) is currently under revision and not yet available for use in the current version of the WISE-APP tool.
+::: {.callout-warning appearance="simple"}
+### Identification Asymmetry: Weather vs. Policy Covariates
+The weather shock coefficient $\beta$ is identified from plausibly exogenous temporal deviations within locations conditional on fixed effects. In contrast, the coefficients on policy covariates ($\delta$) and moderator main effects ($\theta$) are identified primarily from cross-sectional differences across households. They capture observational associations (gaps between households with and without access) rather than causal treatment effects of expanding infrastructure or public services.
 :::
 
+### Unconditional Quantile Regression (RIF)
 
-Distributional regression uses a Recentered Influence Function (RIF) to estimate the effect of weather on specific *quantiles* of the unconditional welfare distribution. Rather than asking "how does average welfare change with weather?", it asks "how does the 20th percentile of the overall welfare distribution change with weather?"
+Unconditional Quantile Regression (Firpo, Fortin & Lemieux 2009) estimates how weather shocks shift specific quantiles ($q_\tau$) of the population welfare distribution ($\tau = 0.1, 0.2, \dots, 0.9$):
 
-**What the coefficients mean.** RIF regression produces a separate coefficient for each quantile (τ = 0.1, 0.2, …, 0.9). The coefficient at τ = 0.2 answers: "For a small increase in average exposure to this weather variable across the population, how does the 20th percentile of the welfare distribution shift?" Coefficients that are more negative at low quantiles than at high quantiles indicate that weather shocks hit the poor harder — a direct measure of distributional vulnerability.
+$$\text{RIF}(y_{ijt}; q_\tau) = \beta_\tau \, \text{Haz}_{kt} + \theta_\tau \, M_{ijt} + \gamma_\tau \, (\text{Haz}_{kt} \times M_{ijt}) + \delta_\tau \, X_{ijt} + \alpha_{j,\tau} + \lambda_{t,\tau} + \varepsilon_{ijt,\tau}$$
 
-**Coefficient curves across quantiles.** Results show a coefficient curve across quantiles rather than a single number. A downward-sloping curve (more negative at low τ) signals disproportionate harm to the poor. A flat curve suggests uniform impacts. A curve that crosses zero indicates beneficial weather effects for some parts of the distribution and harmful effects for others.
+The $\beta_\tau$ curve traces how weather vulnerability varies across strata of the welfare distribution. RIF measures the movement of *population quantiles* (the anonymity property) rather than tracking fixed individual household trajectories, making it well-suited for assessing climate impacts on poverty rates, poverty gaps, and the Gini index.
 
-**Why this matters for policy.** When weather sensitivity varies across the welfare distribution, any policy that raises a household's welfare also changes its weather vulnerability — by repositioning it in the distribution. A cash transfer that lifts a household from the 10th to the 25th percentile moves it to a less weather-vulnerable part of the distribution. Distributional regression captures this *repositioning* effect, which the Step 3 policy analysis uses to measure the full resilience benefit of social protection programmes. See the Step 3 documentation for details.
+### Interaction Terms & Resilience Channels
 
-**Limitations.** The quantile grid covers τ = 0.1 to τ = 0.9. Households in the bottom or top 10% of the distribution fall outside the estimated range and are assigned to the nearest boundary quantile for simulation purposes. Predictions at the extremes should therefore be treated with caution. Each quantile regression is also estimated independently, so predicted quantiles are not guaranteed to be monotonically ordered in all counterfactual scenarios, though this is uncommon in practice.
-
-### Choosing Between Linear and RIF Regression
-
-| | Linear regression | Distributional regression (RIF) |
-|---|---|---|
-| **Estimates** | Average (mean) welfare effect | Quantile-specific effects (τ = 0.1 to 0.9) |
-| **Coefficients** | One per weather variable | A curve of 9 estimates per weather variable |
-| **Distributional heterogeneity** | Only through interaction terms | Directly estimated |
-| **Cash transfer resilience (Step 3)** | Only if cash×weather interaction specified | Captured via repositioning |
-| **Recommended for** | Average impact analysis, binary outcomes | Distributional analysis, social protection evaluation |
-
-Start with linear regression to establish the average relationship. Switch to RIF when you want to assess whether poor households are disproportionately affected, or when Step 3 will include cash transfer or social protection scenarios where the repositioning channel matters.
-
-### Interaction Terms and Weather Sensitivity
-
-Interaction terms test whether the weather-welfare relationship differs across groups. An interaction between temperature and electricity access, for example, tests whether electrified households have lower temperature sensitivity. A negative and significant interaction coefficient means electricity access buffers the welfare effects of heat stress.
-
-Interactions are the primary mechanism through which infrastructure, digital, and labour market policies produce resilience effects in Step 3. If temperature is interacted with electricity access in Step 1, the Step 3 scenario of increasing electricity access will simultaneously:
-
-1. Raise average welfare through the direct electricity coefficient.
-2. Reduce temperature sensitivity for newly electrified households, through the interaction coefficient.
-
-Check whether interaction terms are statistically significant before relying on them for policy resilience analysis. Non-significant interactions will produce policy effects only through the main effect, not through weather sensitivity.
+Interaction terms ($\text{Haz}_{kt} \times M_{ijt}$) estimate whether resilience-building characteristics buffer the welfare loss from adverse weather shocks. For example, if $\beta < 0$ (heat reduces welfare) and $\gamma > 0$ for electricity access, electrified households experience a smaller welfare decline during heatwaves. This interaction effect provides the empirical basis for simulating adaptation policies in Step 3.

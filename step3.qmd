@@ -4,9 +4,14 @@ title: "Step 3: Policy Scenarios"
 
 ## Overview
 
-The Policy Scenarios step evaluates how specific adaptation interventions would change the welfare distribution produced in Step 2. WISE-APP re-runs the welfare simulation under a counterfactual in which household or area characteristics have been modified according to the chosen policy. This quantifies both direct welfare gains (a shift in the level of the exceedance curve) and changes in weather sensitivity (a change in the slope of the curve, i.e. resilience).
+The Policy Scenarios step evaluates how specific adaptation interventions would change the welfare distribution produced in Step 2. The core of this work comprises the re-running of the welfare simulations and visualizations in Step 2, but with additional counterfactuals constructed by changing  household or area characteristics in the selectecd survey for simulation according to desired policy scenarios. 
 
-Four types of policy intervention are available: social protection, infrastructure, digital inclusion, and labour market.
+Hence, one should refer back to the Step 2 page for a more detailed understanding of the simulation methodology and standard visualization output interpretations. The standard results output in Step 3 are identical to those described in Step 2, except with the additional policy-adjusted scenario output presented alongside all prior baseline and alternative climate scenarios.
+
+Nevertheless, once simulated, Step 3 extends analysis of welfare simulation outputs in decompositional analysis. As underlying survey data is run with counterfactual characteristics on the Model in Step 1, changes to welfare can occur both at the level of distribution (i.e. households as richer or poorer with cash differing levels of assistance, infrastructure), as well as resiliance (i.e. households as they get richer may be less sensitive to changing weather conditions). This decomposition of welfare impact sources can further inform policy programming.
+
+**For all non-cash tranfer policies, these policies MUST be included, ideally as interaction terms, in the defined Weather-Welfare Model defined in Step 1.**
+
 
 ## Interface
 
@@ -14,38 +19,34 @@ Four types of policy intervention are available: social protection, infrastructu
 
 ## Instructions
 
-### 3.1 Social Protection
+The core of Step 3 comprises policy options to simulate how differing household and area characteristics would change welfare outcomes as observed in Step 2 based on the welfare-weather relationship defined in Step 1. The current iteration of the WISE-APP enables policy across five categories: Social Protection, Infrastructure, Digital Inclusion, Labor Market, and Education. Social Protection enables the most options, as it comprises cash transfer program settings. The remaining categories are simpler in implementation, typically with an option to change the proportion of a variable like educational attainment or access to electricity across the input survey by a margin (up to universal coverage), to simulate the impact of this policy change on welfare outcomes and the resulting sensitivity to differing climate scenarios.
+
+How this setting is adjusted depends significantly on the policy variable selected. 
+
+- **Binary Variables**: [Many policy variables are binaries (does the household have access to electricity, or have a member who attained at least a secondary school education, etc.). These binary variables can be adjusted to increase the proportion of households reporting these characteristics from -20% to +100%, by randomly selecting households to flip these attributes to meet the overall threshold. These variables will also have a universal coverage option, enabling a shift of all households to have coverage.]{.mark}
+
+- **Numeric Variables**: [Some policy variables are numeric (i.e. reporting distance to nearest health centers, in minutes). These variables have a -20% to 100% option as well, which reduces all households numeric values by that amount. These variables may also have a maximum or minimum threshold value, operating similar to the universal coverage option, where all households exceeding the threshold values are replaced by that threshold.]{.mark}
+
+Cash transfer approaches function somewhat differently, and are described in detail in the Social Protection section.
+
+### Social Protection
 
 Configure a cash transfer programme to eligible households.
 
 #### Programme type
 
-- **Shock-responsive** (default) — the programme activates only when a weather event crosses a defined trigger threshold.
-- **Regular** — a standing transfer programme that runs regardless of weather conditions.
+The current iteration of the WISE-APP enbles only a regular chash transfer option, one that runs regardless of weather conditions. 
 
-#### Trigger (shock-responsive only)
-
-Select the type of threshold that activates the programme and specify the trigger value:
+::: {.callout-note collapse="true"}
+#### Potential Future Adjustments
+Another possibility would be to develop a 'shock-response' program, which would activate only after a set trigger. This could include:
 
 - **Return period of event ≥ x years** (default: 10) — the programme activates when the weather event has a return period of at least x years (i.e. a 1-in-x year event or worse).
 - **Weather variable exceeds x** — the programme activates when a specific weather variable surpasses a numeric threshold.
 - **Modelled welfare loss ≥ $x** — the programme activates when the model predicts that average welfare will fall by at least $x.
 - **Modelled increase in poverty gap ≥ $x** — the programme activates when the model predicts the poverty gap will increase by at least $x.
 
-#### Targeting
-
-Select which households receive the transfer:
-
-- **Ex-ante poor** (default) — households below the welfare threshold in the survey (bottom 20% by default). The poorest percentile cutoff is adjustable (5–60%).
-- **Universal** — all households receive the transfer.
-- **Predicted poor at trigger** — households predicted to fall below the poverty line when the trigger condition is met.
-- **Proxy means test (PMT)** — households identified by a composite index of observable characteristics.
-- **Geographic** — households in the worst-affected administrative regions.
-
-For all non-universal targeting methods, specify:
-
-- **Inclusion error** (default 10%) — the share of non-eligible households incorrectly included in the programme.
-- **Exclusion error** (default 10%) — the share of eligible households incorrectly excluded.
+:::
 
 #### Budget and transfer amount
 
@@ -54,68 +55,81 @@ Two budget modes are available:
 - **Transfer-first** (default) — specify the transfer amount per household ($/HH); the total programme budget is derived from the number of beneficiaries.
 - **Budget-first** — specify the total programme budget; the per-household transfer is derived from the number of beneficiaries. Budget can be set as a fixed amount, a share of modelled welfare loss, a proportion of the poverty increase, or based on the annual expected loss.
 
-Specify the **administrative cost** (0–40%, default 10%). Admin costs are deducted from the total budget before calculating per-household transfers.
 
-#### Timing
+#### Targeting
 
-For regular programmes, specify the number of transfer payments per year (default: 6). For shock-responsive programmes, the transfer is a one-time payment at activation.
+::: {.callout-note collapse="true"}
+#### Potential Future Adjustments
+Another possibility would be to develop a 'PMT for modeling cash assistance approaches, this would require an expansion of the categorial targeting approach defined below.
+:::
 
-### 3.2 Infrastructure
+Select which households receive the transfer:
 
-Modify the share of households with access to physical infrastructure. For each dimension, either set access to **universal** (100%) or specify a **percentage change** from the survey baseline (−20% to +100%, default 0%).
+- **Universal** — all households receive the transfer.
+- **Ex-ante poor** (default) — households below the welfare threshold in the survey (bottom 20% by default). The poorest percentile cutoff is adjustable (5–60%).
+- **Categorical Targeting** — households identified by individual demographic or area characteristics.
 
-- **Electricity access**
-- **Improved drinking water access**
-- **Improved sanitation access**
-- **Health facility access** — specified as either a percentage reduction in travel time or a cap on maximum travel time (minutes).
+For all non-universal targeting methods, specify:
 
-### 3.3 Digital Inclusion
+- **Inclusion error** (default 10%) — the share of non-eligible households incorrectly included in the programme.
+- **Exclusion error** (default 10%) — the share of eligible households incorrectly excluded.
 
-Modify the share of households with access to digital services. Same configuration pattern as infrastructure (universal or percentage change):
 
-- **Internet access**
-- **Mobile phone ownership**
+#### Frequency and Timing
 
-### 3.4 Labour Market
+For regular programmes, specify the number of transfer payments per year (default: 6, from 2-24 times per year an option).
 
-Modify aggregate labour market conditions by specifying changes in percentage points from the survey baseline:
+### Infrastructure
 
-- **Labour force participation** — change in pp (−20 to +20 pp, default 0).
-- **Employment rate** — change in pp (−20 to +20 pp, default 0).
-- **Sectoral composition** — shift toward agriculture, manufacturing, or services.
+Current infrastructure variables are:
 
-### 3.5 Running the Policy Simulation
+- Households reporting access to electricity
+- Households reporting access to piped water
+- Households reporting access to a health care facility
+
+For access to electricity or piped water, there are options to change the access by a percentage range (-20% to 100%) as well as an option to provide universal coverage. 
+
+For access to health facilities, one can change travel time as a percentage change from baseline (-20% to +100%), or set a maximum travel time (in minutes).
+
+### Digital Inclusion
+
+Current digital inclusion variables are:
+
+- Internet access
+- Mobile phone ownership
+
+As binary variables, these can be adjusted to universal coverage or as a percentage change from baseline (-20% to +100%). [For percentage changes, a randome fraction of those households are selected and changed to match that percentage.]{.mark}
+
+### Labour Market
+
+Current labour market variables are:
+
+XXX
+
+### Education
+
+Current education variables are:
+
+- Primary education attainment rate
+- Secondary education attainment rate
+
+As binary variables, these can be adjusted to universal coverage or as a percentage change from baseline (-20% to +100%). [For percentage changes, a randome fraction of those households are selected and changed to match that percentage.]{.mark}
+
+### Running the Policy Simulation
 
 Once the policy parameters are set, click **Run simulation**. WISE-APP re-runs the Step 2 simulation with the modified household and area characteristics, producing a counterfactual welfare distribution that can be compared directly against the Step 2 baseline.
 
-### 3.6 Interpreting Results
+## Results
 
-Results show the policy's impact on two dimensions, displayed as overlaid exceedance curves (baseline vs. policy counterfactual):
+The results and adjustment settings on the results tab will be identical in layout and options to what was displayed in Step 2, and the policy simulation will be interpreted identically as an alternative counterfactual as compared to a baseline or alternative weather scenario. Please refer to Step 2 guidance for further details and context for how to interpret these charts.
 
-- **Welfare level** — a vertical shift of the exceedance curve indicates a direct change in average welfare. An upward shift (for welfare) or leftward shift (for poverty) means households are better off on average under the policy.
-- **Weather sensitivity / resilience** — a change in the slope of the exceedance curve indicates that the relationship between weather and welfare has changed. A flatter curve under the policy means households are less exposed to weather-driven welfare swings — i.e. the policy improves resilience.
+## Diagnostics
 
-**How policies work in the model:**
+The diagnostics tabs in the policy scenario option provides some basic summary statistics and descriptives on the policy veriable of interest, and how it affects the welfare outcome of interest.
 
-- **Infrastructure, digital, and labour market policies** modify the covariate values for affected households. The welfare change is computed through the regression coefficients estimated in Step 1. If a variable appears in an interaction term with a weather variable (Step 1, interaction settings), changing it will also change the weather sensitivity of welfare — this is how these policies produce resilience effects.
-- **Social protection policies** add a direct income transfer to eligible households, shifting their welfare upward by the transfer amount. When triggered by weather events, the transfer partially offsets weather-driven welfare losses.
+## Decomposition
 
-::: {.callout-note}
-## Development status
-Infrastructure, digital inclusion, and labour market scenario results are available in the current release. The full social protection simulation — including trigger activation, targeting errors, and budget mechanics — is under active development.
-:::
-
-## Tips and Common Issues
-
-- **Tip:** A policy that flattens the exceedance curve without shifting its level indicates a pure resilience effect — the policy does not change average welfare but reduces exposure to weather extremes. This is a distinct and valuable outcome for climate adaptation.
-- **Tip:** Compare the resilience effects of different policy types. Infrastructure and digital policies tend to reduce weather sensitivity when the relevant variables appear in interaction terms in Step 1; labour market policies shift the sectoral composition and can affect exposure to weather shocks differently.
-- **Tip:** Run multiple policies individually before combining them. This allows you to attribute the combined effect to its components.
-- **Issue:** If a policy produces no change in weather sensitivity, check whether the modified variable was included as an interaction term in Step 1. Variables that only enter the model as main-effect covariates will shift the welfare level but not the slope of the exceedance curve.
-- **Issue:** Policy effects are conditional on the Step 1 model specification. Policies that target variables not present in the survey data, or not selected as covariates, will have no effect in the simulation.
-
-## Policy Effects: Decomposition into Channels {#policy-decomposition}
-
-WISE-APP decomposes the total effect of a policy intervention into two channels: the **main effect** (direct welfare change) and the **resilience effect** (change in weather sensitivity). Understanding this decomposition helps distinguish policies that raise welfare levels from those that reduce vulnerability to weather variability — and from those that do both.
+WISE-APP decomposes the total effect of a policy intervention into two channels: the **main effect** (direct welfare change) and the **resilience effect** (change in weather sensitivity). This tab presents an overview of these effects, but it is crucial to understand the terms used here. Understanding this decomposition helps distinguish policies that raise welfare levels from those that reduce vulnerability to weather variability — and from those that do both.
 
 ### Main Effect
 
@@ -166,3 +180,47 @@ When comparing policy effects across engine choices, expect the RIF engine to sh
 **No general equilibrium.** The simulation modifies household-level characteristics but treats the broader economic environment (prices, wages, labour demand) as fixed. Policies with economy-wide effects may be under- or overstated.
 
 **Extrapolation from the training data.** The policy simulation applies Step 1 coefficients to a modified survey. If the policy moves households to covariate values rarely or never observed in the training data (for example, near-universal electrification in a survey with low baseline access), the coefficients estimated from the observed data may not accurately represent welfare outcomes in that counterfactual regime.
+
+
+
+
+# DEPRECIATED
+
+## 3.6 Interpreting Results
+
+Results show the policy's impact on two dimensions, displayed as overlaid exceedance curves (baseline vs. policy counterfactual):
+
+- **Welfare level** — a vertical shift of the exceedance curve indicates a direct change in average welfare. An upward shift (for welfare) or leftward shift (for poverty) means households are better off on average under the policy.
+- **Weather sensitivity / resilience** — a change in the slope of the exceedance curve indicates that the relationship between weather and welfare has changed. A flatter curve under the policy means households are less exposed to weather-driven welfare swings — i.e. the policy improves resilience.
+
+**How policies work in the model:**
+
+- **Infrastructure, digital, and labour market policies** modify the covariate values for affected households. The welfare change is computed through the regression coefficients estimated in Step 1. If a variable appears in an interaction term with a weather variable (Step 1, interaction settings), changing it will also change the weather sensitivity of welfare — this is how these policies produce resilience effects.
+- **Social protection policies** add a direct income transfer to eligible households, shifting their welfare upward by the transfer amount. When triggered by weather events, the transfer partially offsets weather-driven welfare losses.
+
+::: {.callout-note}
+## Development status
+Infrastructure, digital inclusion, and labour market scenario results are available in the current release. The full social protection simulation — including trigger activation, targeting errors, and budget mechanics — is under active development.
+:::
+
+## Tips and Common Issues
+
+- **Tip:** A policy that flattens the exceedance curve without shifting its level indicates a pure resilience effect — the policy does not change average welfare but reduces exposure to weather extremes. This is a distinct and valuable outcome for climate adaptation.
+- **Tip:** Compare the resilience effects of different policy types. Infrastructure and digital policies tend to reduce weather sensitivity when the relevant variables appear in interaction terms in Step 1; labour market policies shift the sectoral composition and can affect exposure to weather shocks differently.
+- **Tip:** Run multiple policies individually before combining them. This allows you to attribute the combined effect to its components.
+- **Issue:** If a policy produces no change in weather sensitivity, check whether the modified variable was included as an interaction term in Step 1. Variables that only enter the model as main-effect covariates will shift the welfare level but not the slope of the exceedance curve.
+- **Issue:** Policy effects are conditional on the Step 1 model specification. Policies that target variables not present in the survey data, or not selected as covariates, will have no effect in the simulation.
+
+## Policy Effects: Decomposition into Channels {#policy-decomposition}
+
+
+
+
+# DEPRECIATED:
+
+Labor Market Indicators
+Modify aggregate labour market conditions by specifying changes in percentage points from the survey baseline:
+
+- **Labour force participation** — change in pp (−20 to +20 pp, default 0).
+- **Employment rate** — change in pp (−20 to +20 pp, default 0).
+- **Sectoral composition** — shift toward agriculture, manufacturing, or services.

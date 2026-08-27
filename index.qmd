@@ -2,17 +2,18 @@
 title: "Overview"
 ---
 
-::: {.callout-note appearance="simple"}
-This user guide is updated regularly to reflect ongoing developments, new features, and methodological refinements in WISE-APP.
+::: {.callout-important appearance="simple"}
+This guide is updated regularly to reflect new features and methodological refinements in WISE-APP.
 :::
 
-**WISE-APP** (*Weather Impact Simulation and Evaluation for Adaptation Policy and Planning*) is an analytical tool designed to stress-test household welfare under historical and projected climate scenarios, and to evaluate resilience-building policy interventions.
+**WISE-APP** (Weather Impact Simulation and Evaluation for Adaptation Policy and Planning) is a tool designed to stress-test household welfare under historical and projected climate scenarios, and to evaluate resilience-building policy interventions.
 
 ## Access WISE-APP
 
-- [**Web app**](https://datanalytics-int.worldbank.org/wise-app){target="_blank"} -- *requires World Bank single sign-on credentials*
-- [**R Package**](https://github.com/worldbank/welfare-weather-app){target="_blank"} -- *run locally or use custom data, requires access to valid [Data](data.qmd)*
+- [**Internal Web App**](https://datanalytics-int.worldbank.org/wise-app){target="_blank"} -- requires World Bank single sign-on credentials
+- [**R Package**](https://github.com/worldbank/welfare-weather-app){target="_blank"} -- run locally or use custom data, requires [Data](data.qmd) connection.
 
+To install the R package and run the app:
 ```r
 # install.packages("pak")
 pak::pak("worldbank/welfare-weather-app")
@@ -21,15 +22,15 @@ wiseapp::run_app()
 
 ## This Guide
 
-This guide describes the tool's data and three analysis steps:
+This guide describes the data used by WISE-APP and 3 steps of analysis:
 
-[**Data**](data.qmd) — Sources, structure, and spatial linking of survey data (GMD) with climate datasets (ERA5-Land / CMIP6). Data preparation scripts are hosted in [welfare-weather-app-data](https://github.com/worldbank/welfare-weather-app-data){target="_blank"}.
+[**Data**](data.qmd) — Structure, data sources, and spatial linking of survey data with climate datasets. 
 
-[**Step 1 - Model Welfare**](step1.qmd) — Estimate the empirical relationship between local weather and a welfare outcome of interest — such as household consumption or poverty status — from geocoded survey data. The fitted model is the foundation for all subsequent steps.
+[**Step 1 - Model Welfare**](step1.qmd) — Estimate the empirical relationship between weather and a welfare outcome of interest from geocoded survey data. The foundation for all subsequent steps.
 
-[**Step 2 - Climate Scenarios**](step2.qmd) — Simulate the distribution of weather-driven welfare outcomes under historical conditions and for future climate projections (CMIP6 scenarios), by applying the model from Step 1.
+[**Step 2 - Climate Scenarios**](step2.qmd) — Simulate the distribution of weather-driven welfare outcomes under historical conditions and for future climate scenarios, by applying the model from Step 1.
 
-[**Step 3 - Policy Scenarios**](step3.qmd) — Re-simulate welfare under counterfactual policy scenarios (social protection, infrastructure, labor, education...) to quantify welfare gains and evaluate changes in climate resilience against the Step 2 baseline.
+[**Step 3 - Policy Scenarios**](step3.qmd) — Re-simulate welfare under counterfactual policy scenarios (social protection, infrastructure, labor, education...) to evaluate changes in climate resilience against the Step 2 baseline.
 
 Throughout the guide, callout boxes highlight important context:
 

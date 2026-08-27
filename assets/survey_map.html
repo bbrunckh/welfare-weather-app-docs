@@ -1,0 +1,169 @@
+
+<div id="survey-map" class="survey-map"></div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  // ISO 3166-1 alpha-3 code -> approximate country centroid (lat, lng)
+  var centroids = {
+    AGO: [-12.30, 17.54], BEN: [9.31, 2.32], BFA: [12.24, -1.56],
+    BRA: [-10.81, -52.92], CIV: [7.62, -5.55], COL: [4.09, -73.08],
+    DOM: [18.73, -70.16], FJI: [-17.83, 178.00], GAB: [-0.80, 11.61],
+    GHA: [7.95, -1.02], GMB: [13.44, -15.44], GNB: [11.99, -14.93],
+    GTM: [15.68, -90.36], IND: [22.63, 79.02], IRN: [32.64, 54.31],
+    LAO: [19.86, 102.50], LKA: [7.61, 80.70], MLI: [17.34, -3.51],
+    MMR: [19.76, 96.08], MNG: [46.91, 103.53], MRT: [20.27, -10.33],
+    MWI: [-13.23, 34.30], NER: [17.41, 9.40], NGA: [9.59, 8.09],
+    NPL: [28.25, 84.02], PER: [-9.19, -74.42], SEN: [14.47, -14.45],
+    TCD: [15.37, 18.66], TGO: [8.48, 0.97], TJK: [38.45, 71.06],
+    TLS: [-8.81, 125.92], VNM: [16.60, 106.35], ZMB: [-13.49, 27.85]
+  };
+
+  // Minimal RFC 4180-style CSV parser (handles quoted fields)
+  function parseCSV(text) {
+    var rows = [], row = [], field = "", quoted = false;
+    for (var i = 0; i < text.length; i++) {
+      var c = text[i];
+      if (quoted) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else { quoted = false; }
+        } else { field += c; }
+      } else if (c === '"') {
+        quoted = true;
+      } else if (c === ',') {
+        row.push(field); field = "";
+      } else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(field); rows.push(row);
+        row = []; field = "";
+      } else {
+        field += c;
+      }
+    }
+    if (field !== "" || row.length > 0) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function fmtObs(n) {
+    return n >= 1000000 ? (n / 1000000).toFixed(1) + "M"
+         : n >= 1000 ? Math.round(n / 1000) + "K"
+         : String(n);
+  }
+
+  var map = L.map("survey-map", { scrollWheelZoom: true });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  }).addTo(map);
+
+  // Number of survey rounds -> fill color (YlGnBu-inspired sequential scale)
+  var roundBins = [
+    { label: "1",          min: 1, max: 1, color: "#c7e9b4" },
+    { label: "2",          min: 2, max: 2, color: "#7fcdbb" },
+    { label: "3\u20134",   min: 3, max: 4, color: "#41b6c4" },
+    { label: "5\u20136",   min: 5, max: 6, color: "#217dab" },
+    { label: "7+",         min: 7, max: Infinity, color: "#1c5077" }
+  ];
+  function colorForRounds(n) {
+    for (var i = 0; i < roundBins.length; i++) {
+      if (n >= roundBins[i].min && n <= roundBins[i].max) return roundBins[i].color;
+    }
+    return "#999999";
+  }
+
+  fetch("assets/survey_list.csv")
+    .then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (text) {
+      var rows = parseCSV(text.trim());
+      var header = rows.shift();
+      var idx = {};
+      header.forEach(function (h, j) { idx[h] = j; });
+
+      // Aggregate rounds by country: {code: {economy, rounds: Map(year|survname -> {survname, year, obs})}}
+      var countries = {};
+      rows.forEach(function (row) {
+        if (!row[idx["code"]]) return;
+        var code = row[idx["code"]];
+        if (!countries[code]) {
+          countries[code] = { economy: row[idx["economy"]], rounds: {} };
+        }
+        var key = row[idx["year"]] + "|" + row[idx["survname"]];
+        if (!countries[code].rounds[key]) {
+          countries[code].rounds[key] = {
+            year: parseInt(row[idx["year"]], 10),
+            survname: row[idx["survname"]],
+            levels: []
+          };
+        }
+        countries[code].rounds[key].levels.push(
+          row[idx["level"]] + ": " +
+            fmtObs(parseInt(row[idx["obs"]], 10)) + " obs"
+        );
+      });
+
+      var bounds = [];
+      Object.keys(countries).forEach(function (code) {
+        var c = countries[code];
+        var centroid = centroids[code];
+        if (!centroid) return;
+
+        var roundsList = Object.keys(c.rounds)
+          .map(function (k) { return c.rounds[k]; })
+          .sort(function (a, b) { return a.year - b.year || a.survname.localeCompare(b.survname); });
+
+        var years = roundsList.map(function (r) { return r.year; });
+        var minYear = Math.min.apply(null, years);
+        var maxYear = Math.max.apply(null, years);
+        var nRounds = roundsList.length;
+
+        var items = roundsList.map(function (r) {
+          return "<li><strong>" + r.survname + " " + r.year + "</strong><br>" +
+            r.levels.join("<br>") + "</li>";
+        }).join("");
+
+        var popup =
+          '<div class="survey-popup"><strong>' + c.economy + "</strong>" +
+          "<div>" + nRounds + " survey round" + (nRounds > 1 ? "s" : "") +
+          ", " + minYear + (maxYear > minYear ? "\u2013" + maxYear : "") + "</div>" +
+          "<ul>" + items + "</ul></div>";
+
+        L.circleMarker(centroid, {
+          radius: 5 + 2.5 * Math.sqrt(nRounds),
+          color: "#333333",
+          weight: 0.75,
+          fillColor: colorForRounds(nRounds),
+          fillOpacity: 0.85
+        })
+          .bindPopup(popup)
+          .addTo(map);
+
+        bounds.push(centroid);
+      });
+
+      map.fitBounds(bounds, { padding: [20, 20] });
+
+      // Legend for the number of survey rounds
+      var legend = L.control({ position: "bottomright" });
+      legend.onAdd = function () {
+        var div = L.DomUtil.create("div", "survey-map-legend");
+        var html = "<strong>Survey rounds</strong>";
+        roundBins.forEach(function (b) {
+          html += '<span class="legend-row"><i style="background:' + b.color +
+            '"></i>' + b.label + "</span>";
+        });
+        div.innerHTML = html;
+        return div;
+      };
+      legend.addTo(map);
+    })
+    .catch(function (err) {
+      document.getElementById("survey-map").innerHTML =
+        '<p style="padding:1rem;color:#b02a37">Survey coverage map could not be loaded: ' + err.message + '</p>';
+    });
+})();
+</script>

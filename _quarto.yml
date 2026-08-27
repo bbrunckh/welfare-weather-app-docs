@@ -28,12 +28,17 @@ format:
   html:
     theme: cosmo
     css: styles.css
+    resources:
+      - assets
     toc: true
     toc-depth: 3
     number-sections: true
     code-fold: false
     code-tools: true
     highlight-style: github
+    link-citations: true
+
+bibliography: references.bib
 
 execute:
   freeze: auto

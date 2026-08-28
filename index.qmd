@@ -11,7 +11,7 @@ This guide is updated regularly to reflect new features and methodological refin
 ## Access WISE-APP
 
 - [**Internal Web App**](https://datanalytics-int.worldbank.org/wise-app){target="_blank"} -- requires World Bank single sign-on credentials
-- [**R Package**](https://github.com/worldbank/welfare-weather-app){target="_blank"} -- run locally or use custom data, requires [Data](data.qmd) connection.
+- [**R Package**](https://github.com/worldbank/wise-app){target="_blank"} -- run locally or use custom data, requires [Data](data.qmd) connection.
 
 To install the R package and run the app:
 ```r
@@ -24,13 +24,13 @@ wiseapp::run_app()
 
 This guide describes the data used by WISE-APP and 3 steps of analysis:
 
-[**Data**](data.qmd) — Structure, data sources, and spatial linking of survey data with climate datasets. 
+- [**Data**](data.qmd) — Structure, data sources, and spatial linking of survey data with climate datasets. 
 
-[**Step 1 - Model Welfare**](step1.qmd) — Estimate the empirical relationship between weather and a welfare outcome of interest from geocoded survey data. The foundation for all subsequent steps.
+- [**Step 1 - Model Welfare**](step1.qmd) — Estimate the empirical relationship between weather and a welfare outcome of interest from geocoded survey data. The foundation for all subsequent steps.
 
-[**Step 2 - Climate Scenarios**](step2.qmd) — Simulate the distribution of weather-driven welfare outcomes under historical conditions and for future climate scenarios, by applying the model from Step 1.
+- [**Step 2 - Climate Scenarios**](step2.qmd) — Simulate the distribution of weather-driven welfare outcomes under historical conditions and for future climate scenarios, by applying the model from Step 1.
 
-[**Step 3 - Policy Scenarios**](step3.qmd) — Re-simulate welfare under counterfactual policy scenarios (social protection, infrastructure, labor, education...) to evaluate changes in climate resilience against the Step 2 baseline.
+- [**Step 3 - Policy Scenarios**](step3.qmd) — Evaluate welfare under counterfactual policy scenarios (social protection, infrastructure, labor, education...) against the Step 2 baseline, with a decomposition of level and resilience effects.
 
 Throughout the guide, callout boxes highlight important context:
 
@@ -41,7 +41,7 @@ Practical guidance for selecting model inputs, transformations, and interpreting
 
 ::: {.callout-warning appearance="simple"}
 ### Analytical Caveat
-Important analytical boundaries and model assumptions to keep in mind.
+Important limitations and model assumptions to keep in mind.
 :::
 
 ::: {.callout-note appearance="simple"}
@@ -68,4 +68,4 @@ Please cite this guide as follows:
 
 ## Getting Help
 
-To report issues, ask questions, or suggest improvements, please [open an issue](https://github.com/worldbank/welfare-weather-app-docs/issues){target="_blank"} on GitHub.
+To report issues, ask questions, or suggest improvements, please [open an issue](https://github.com/worldbank/wise-app-docs/issues){target="_blank"} on GitHub.

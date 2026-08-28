@@ -4,223 +4,204 @@ title: "Step 3: Policy Scenarios"
 
 ## Overview
 
-The Policy Scenarios step evaluates how specific adaptation interventions would change the welfare distribution produced in Step 2. The core of this work comprises the re-running of the welfare simulations and visualizations in Step 2, but with additional counterfactuals constructed by changing  household or area characteristics in the selectecd survey for simulation according to desired policy scenarios. 
+Step 3 evaluates how specific adaptation policy scenarios would change the welfare distribution produced in [Step 2 (Climate Scenarios)](step2.qmd). 
 
-Hence, one should refer back to the Step 2 page for a more detailed understanding of the simulation methodology and standard visualization output interpretations. The standard results output in Step 3 are identical to those described in Step 2, except with the additional policy-adjusted scenario output presented alongside all prior baseline and alternative climate scenarios.
+It answers the question: **How would welfare outcomes change under counterfactual policy scenarios?**
 
-Nevertheless, once simulated, Step 3 extends analysis of welfare simulation outputs in decompositional analysis. As underlying survey data is run with counterfactual characteristics on the Model in Step 1, changes to welfare can occur both at the level of distribution (i.e. households as richer or poorer with cash differing levels of assistance, infrastructure), as well as resiliance (i.e. households as they get richer may be less sensitive to changing weather conditions). This decomposition of welfare impact sources can further inform policy programming.
+The levers configured here modify the Step 2 baseline survey, and the policy-adjusted results are derived analytically and presented alongside the Step 2 baseline, using the identical charts and uncertainty decomposition. 
 
-**For all non-cash tranfer policies, these policies MUST be included, ideally as interaction terms, in the defined Weather-Welfare Model defined in Step 1.**
+Step 3 then extends the analysis with a **decomposition** that splits the total policy effect into a *main effect* (direct welfare change) and a *resilience effect* (change in weather sensitivity). Because counterfactual welfare is the Step 1 model evaluated at modified household and area characteristics, welfare can change both through levels (households becoming richer with cash assistance or infrastructure access) and through resilience (richer or better-connected households may be less sensitive to weather shocks). This decomposition distinguishes policies that raise welfare levels from policies that reduce vulnerability to weather variability — and from those that do both.
 
-
-## Interface
-
-![Policy Scenarios Interface](images/step3-screenshot.png)
-
-## Instructions
-
-The core of Step 3 comprises policy options to simulate how differing household and area characteristics would change welfare outcomes as observed in Step 2 based on the welfare-weather relationship defined in Step 1. The current iteration of the WISE-APP enables policy across five categories: Social Protection, Infrastructure, Digital Inclusion, Labor Market, and Education. Social Protection enables the most options, as it comprises cash transfer program settings. The remaining categories are simpler in implementation, typically with an option to change the proportion of a variable like educational attainment or access to electricity across the input survey by a margin (up to universal coverage), to simulate the impact of this policy change on welfare outcomes and the resulting sensitivity to differing climate scenarios.
-
-How this setting is adjusted depends significantly on the policy variable selected. 
-
-- **Binary Variables**: [Many policy variables are binaries (does the household have access to electricity, or have a member who attained at least a secondary school education, etc.). These binary variables can be adjusted to increase the proportion of households reporting these characteristics from -20% to +100%, by randomly selecting households to flip these attributes to meet the overall threshold. These variables will also have a universal coverage option, enabling a shift of all households to have coverage.]{.mark}
-
-- **Numeric Variables**: [Some policy variables are numeric (i.e. reporting distance to nearest health centers, in minutes). These variables have a -20% to 100% option as well, which reduces all households numeric values by that amount. These variables may also have a maximum or minimum threshold value, operating similar to the universal coverage option, where all households exceeding the threshold values are replaced by that threshold.]{.mark}
-
-Cash transfer approaches function somewhat differently, and are described in detail in the Social Protection section.
-
-### Social Protection
-
-Configure a cash transfer programme to eligible households.
-
-#### Programme type
-
-The current iteration of the WISE-APP enbles only a regular chash transfer option, one that runs regardless of weather conditions. 
-
-::: {.callout-note collapse="true"}
-#### Potential Future Adjustments
-Another possibility would be to develop a 'shock-response' program, which would activate only after a set trigger. This could include:
-
-- **Return period of event ≥ x years** (default: 10) — the programme activates when the weather event has a return period of at least x years (i.e. a 1-in-x year event or worse).
-- **Weather variable exceeds x** — the programme activates when a specific weather variable surpasses a numeric threshold.
-- **Modelled welfare loss ≥ $x** — the programme activates when the model predicts that average welfare will fall by at least $x.
-- **Modelled increase in poverty gap ≥ $x** — the programme activates when the model predicts the poverty gap will increase by at least $x.
-
+::: {.callout-warning appearance="simple"}
+### Policy Variables Must Be in the Step 1 Model
+Policy levers act **only through the model specified in Step 1**: a category's controls appear only when its variables were selected in the Step 1 model (as covariates or interaction terms), and the policy simulation mutates only model variables. When a category's variables are absent, the panel shows a placeholder listing the candidate variables to include back in Step 1. The one exception is the social-protection cash transfer, which acts on the welfare outcome itself and therefore requires no Step 1 selection. The recommended way to guarantee a lever is active is to select its policy scenario in Step 1, which locks the corresponding variables into the model as weather interactions (see [Policy Scenarios & Interaction Terms](step1.qmd#policy-scenarios-interaction-terms)).
 :::
 
-#### Budget and transfer amount
+As in Step 2, **simulations hold the baseline survey population constant** (no economic growth, structural transformation, migration, or technological adaptation) — see the stress-testing caveat on the Step 2 page. The broader economic environment is equally fixed: prices, wages, and labour demand do not respond to the simulated policies (no general-equilibrium feedback), so economy-wide effects of the levers may be under- or overstated.
+
+![Step 3 Interface](assets/step3-ui.png)
+
+## Step-by-Step Instructions
+
+### 1. Policy Levers
+
+The current release enables policies across five categories: **Social Protection**, **Infrastructure**, **Digital Inclusion**, **Labour Market**, and **Education**. How a lever adjusts the survey depends on the variable type:
+
+- **Binary access variables** (e.g., electricity access, internet access, educational attainment): a slider changes access by **−20% to +100%**, plus a **Universal** checkbox that sets every household to covered. Positive percentages flip that share of the *currently uncovered* households to covered; negative percentages flip that share of the *currently covered* households back to uncovered. Households are selected at random within each group.
+- **Numeric variables** (health-facility travel time): either reduce travel time by up to **−100%** (increase by up to +20%), or set a **maximum travel time** (15–240 minutes) that replaces every household's value exceeding the threshold.
+- **Labour-market aggregates**: percentage-point changes to the employment rate and shifts in sectoral composition, applied across the survey (see below).
+
+::: {.callout-note appearance="simple"}
+### Random Assignment
+Binary and numeric levers assign counterfactual values by random selection within the affected group. Re-running the same policy therefore produces slightly different household assignments; effects on aggregate outcomes are stable, but household-level detail varies between runs. The baseline arm is never re-drawn, so all run-to-run variation is confined to the policy arm.
+:::
+
+### 2. Social Protection (Cash Transfers)
+
+Configure a cash-transfer programme for eligible households.
+
+#### Programme Type
+
+The current release enables a **regular cash transfer** — one that pays out regardless of weather conditions.
+
+::: {.callout-note collapse="true"}
+#### Shock-Responsive SP (Future Release)
+A *shock-responsive* programme — one that activates only after a set trigger — is a planned extension. Candidate triggers include: return period of the weather event ≥ x years; a specific weather variable exceeding a numeric threshold; modelled welfare loss ≥ \$x; or a modelled increase in the poverty gap ≥ \$x.
+:::
+
+#### Budget and Transfer Amount
 
 Two budget modes are available:
 
-- **Transfer-first** (default) — specify the transfer amount per household ($/HH); the total programme budget is derived from the number of beneficiaries.
-- **Budget-first** — specify the total programme budget; the per-household transfer is derived from the number of beneficiaries. Budget can be set as a fixed amount, a share of modelled welfare loss, a proportion of the poverty increase, or based on the annual expected loss.
+- **Transfer-first** (default) — specify the transfer per household per payment (\$); the total programme budget is derived from the number of beneficiaries. The per-payment amount is annualized (amount × payments per year) and converted to a daily welfare-equivalent before being added to predicted welfare.
+- **Budget-first** — specify a fixed total budget (\$PPP); the **annual** per-household transfer is derived as budget ÷ eligible beneficiaries (weight-aware, so the realised budget matches the fixed amount when survey weights are present) and converted to a daily equivalent. Payment frequency does not apply in this mode.
 
+In both modes the daily transfer is scaled to the welfare variable's units: for household-level analysis, welfare is measured per capita, so the entered per-household amount is divided by household size before being added.
+
+::: {.callout-note collapse="true"}
+#### Budget-First Mode Extensions (Future Release)
+Additional budget bases — a share of modelled welfare loss, a proportion of the modelled poverty increase, or a fraction of annual expected loss — and transfer schedules that vary by household characteristic are planned extensions; only the fixed-budget mode is currently active.
+:::
 
 #### Targeting
 
-::: {.callout-note collapse="true"}
-#### Potential Future Adjustments
-Another possibility would be to develop a 'PMT for modeling cash assistance approaches, this would require an expansion of the categorial targeting approach defined below.
-:::
-
 Select which households receive the transfer:
 
-- **Universal** — all households receive the transfer.
-- **Ex-ante poor** (default) — households below the welfare threshold in the survey (bottom 20% by default). The poorest percentile cutoff is adjustable (5–60%).
-- **Categorical Targeting** — households identified by individual demographic or area characteristics.
+- **Universal** (default) — all households receive the transfer; no inclusion or exclusion error is applied.
+- **Ex-ante poor** — households at or below the adjustable "poorest bottom x%" cutoff (5–60% in steps of 5, default 20%) of observed baseline welfare.
+- **PMT (proxy means test)** — households flagged by a Step 1 model covariate: pick a numeric covariate and include households with a value at or below a chosen cutoff (slider over the variable's observed range, defaulting to its 20th-percentile value); for binary covariates, target the households where the variable equals 0 or 1 (default 0).
 
-For all non-universal targeting methods, specify:
+For non-universal targeting, users can specify the simulation's targeting errors to better reflect real-world programme implementation:
 
-- **Inclusion error** (default 10%) — the share of non-eligible households incorrectly included in the programme.
-- **Exclusion error** (default 10%) — the share of eligible households incorrectly excluded.
-
+- **Inclusion error** (default 10%, range 0–30%) — the share of non-eligible households incorrectly included in the programme.
+- **Exclusion error** (default 10%, range 0–30%) — the share of eligible households incorrectly excluded.
 
 #### Frequency and Timing
 
-For regular programmes, specify the number of transfer payments per year (default: 6, from 2-24 times per year an option).
+Specify the number of transfer payments per year (2–24, default 6; transfer-first mode only). The daily welfare-equivalent transfer is the per-payment amount scaled to the payment frequency.
 
-### Infrastructure
+### 3. Infrastructure
 
-Current infrastructure variables are:
+The infrastructure category exposes a lever for each access variable included in the Step 1 model:
 
-- Households reporting access to electricity
-- Households reporting access to piped water
-- Households reporting access to a health care facility
+- **Access to electricity** (`electricity`)
+- **Improved water access** (`imp_wat_rec`)
+- **Sanitation access** (`imp_san_rec`)
+- **Piped water access** (`piped`)
+- **Piped water access (on premises)** (`piped_to_prem`)
+- **Improved water and sanitation access** (`imp_wat_san_rec`) — a derived indicator, equal to 1 only where both improved water and improved sanitation are present.
 
-For access to electricity or piped water, there are options to change the access by a percentage range (-20% to 100%) as well as an option to provide universal coverage. 
+Each is a binary lever (−20% to +100% or Universal). In addition:
 
-For access to health facilities, one can change travel time as a percentage change from baseline (-20% to +100%), or set a maximum travel time (in minutes).
+- **Access to health facility** (`ttime_health`, numeric): reduce travel time by a percentage (−100% to +20%) or set a maximum travel time (15–240 minutes).
 
-### Digital Inclusion
+### 4. Digital Inclusion
 
-Current digital inclusion variables are:
+Binary levers for:
 
-- Internet access
-- Mobile phone ownership
+- **Internet access** (`internet`)
+- **Mobile phone ownership** (`cellphone`)
 
-As binary variables, these can be adjusted to universal coverage or as a percentage change from baseline (-20% to +100%). [For percentage changes, a randome fraction of those households are selected and changed to match that percentage.]{.mark}
+Each supports universal coverage or a percentage change from baseline (−20% to +100%).
 
-### Labour Market
+### 5. Labour Market
 
-Current labour market variables are:
+Labour-market levers apply aggregate shifts to the survey and are gated on the corresponding Step 1 variables:
 
-XXX
+- **Employment rate change** (−20 to +20 percentage points, default 0) — available when employment variables (`employed`, `selfemployed`, `unemployed`) are in the model. Positive values flip unemployed households into employment (negative values the reverse), preserving the existing employed/self-employed split.
+- **Sectoral composition** (% of employment) — available when `agriculture`, `industry`, and `services` are all in the model. Set **Manufacturing** and **Services** shares (0–100%); **Agriculture adjusts automatically** to sum to 100%. Only currently working (employed or self-employed) households are reallocated, moving from sectors above their target share to those below.
 
-### Education
+### 6. Education
 
-Current education variables are:
+Binary levers for educational attainment:
 
-- Primary education attainment rate
-- Secondary education attainment rate
+- **Primary completion** (`educ_com1_hh`)
+- **Secondary completion** (`educ_com2_hh`)
+- **Post-secondary completion** (`educ_com3_hh`)
 
-As binary variables, these can be adjusted to universal coverage or as a percentage change from baseline (-20% to +100%). [For percentage changes, a randome fraction of those households are selected and changed to match that percentage.]{.mark}
+Each supports universal coverage or a percentage change from baseline (−20% to +100%).
 
-### Running the Policy Simulation
+### 7. Running the Policy Simulation
 
-Once the policy parameters are set, click **Run simulation**. WISE-APP re-runs the Step 2 simulation with the modified household and area characteristics, producing a counterfactual welfare distribution that can be compared directly against the Step 2 baseline.
+Once the policy parameters are set, click **Run simulation**. Step 3 inherits the Step 2 configuration — the exact baseline survey frame, historical weather window, climate scenarios, projection horizons, residual mode, and uncertainty settings — so nothing needs to be re-entered. The run mutates a copy of the baseline survey with the levers, computes each household's welfare change under the Step 1 model, and adds those deltas to the Step 2 pipelines (see [Methodology detail](#methodology-detail) for the derivation). Three tabs appear on completion: **Results**, **Diagnostics**, and **Decomposition**.
 
-## Results
+#### Interpreting the Results tab
 
-The results and adjustment settings on the results tab will be identical in layout and options to what was displayed in Step 2, and the policy simulation will be interpreted identically as an alternative counterfactual as compared to a baseline or alternative weather scenario. Please refer to Step 2 guidance for further details and context for how to interpret these charts.
+The Results tab mirrors Step 2's layout and controls (aggregation methods, poverty line, deviation from historical baseline, coefficient and inter-model band selectors, exceedance curves, return-period table, per-model trajectories). The difference is the scenario series: **Baseline** and **Policy** are drawn side by side for every climate scenario and horizon — grey, white-filled dots and faded curves for the baseline; red dots and fully opaque curves for the policy — with the historical entry shown once under the baseline. When a deviation view is selected, both arms are expressed relative to the **baseline** historical mean or median. Read the charts exactly as described on the Step 2 page; the policy's effect is the gap between each paired series. A policy that flattens the exceedance curves without shifting their level indicates a pure resilience effect — average welfare is unchanged but exposure to weather extremes falls — a distinct and valuable adaptation outcome.
 
-## Diagnostics
+#### Interpreting the Diagnostics tab
 
-The diagnostics tabs in the policy scenario option provides some basic summary statistics and descriptives on the policy veriable of interest, and how it affects the welfare outcome of interest.
+The Diagnostics tab validates the policy construction:
 
-## Decomposition
+- **Total social protection transfer amount** — the programme's population-level annual cost (weight-aware) and the weighted mean annual transfer per eligible unit (household or individual, per the Step 1 analysis unit).
+- **Summary of manipulated variables** — for each lever-modified variable, the mean and standard deviation before and after the policy, with the change in mean.
+- **Before/after distributions** — per-variable charts of the baseline (grey) vs. policy-adjusted (red) survey: grouped bars of the covered share for binary levers, ridge densities otherwise. The welfare panel includes the cash transfer, so it shows the full post-policy distribution.
 
-WISE-APP decomposes the total effect of a policy intervention into two channels: the **main effect** (direct welfare change) and the **resilience effect** (change in weather sensitivity). This tab presents an overview of these effects, but it is crucial to understand the terms used here. Understanding this decomposition helps distinguish policies that raise welfare levels from those that reduce vulnerability to weather variability — and from those that do both.
-
-### Main Effect
-
-The main effect captures the direct welfare change attributable to the policy, holding weather conditions constant. It has two components:
-
-1. **Cash transfer effect** — for social protection programmes, the direct income boost to eligible households. The transfer raises welfare regardless of weather conditions.
-
-2. **Covariate shift effect** — for infrastructure, digital, and labour market policies, the welfare change associated with the modified covariate itself. For example, gaining access to electricity is associated with higher welfare, as captured by the electricity coefficient in the Step 1 model. This represents the average welfare gain from the policy at observed weather conditions.
-
-The main effect shifts the welfare exceedance curve upward (or, for poverty indicators, leftward) — it raises welfare outcomes regardless of what the weather is doing in a given year.
-
-### Resilience Effect
-
-The resilience effect captures how the policy changes the *relationship* between weather and welfare. A policy with a positive resilience effect makes welfare less responsive to weather shocks — it flattens the exceedance curve rather than simply shifting it.
-
-The resilience effect has two sub-channels:
-
-**Interaction channel.** When the policy changes a covariate that also appears in a weather × covariate interaction in the Step 1 model, the policy changes the effective weather coefficient for affected households. For example, if temperature is interacted with electricity access in Step 1, then increasing electricity access reduces the temperature coefficient for newly electrified households — they become less sensitive to heat stress. This channel is present for both linear and distributional regression engines.
-
-**Repositioning channel** (distributional regression only). This channel is unique to the RIF regression engine. When the welfare distribution has heterogeneous weather sensitivity — poor households are more vulnerable to weather than wealthy ones — any policy that raises a household's welfare also changes its position in the distribution and, with it, its weather vulnerability. A cash transfer that lifts a household from the 10th to the 25th percentile moves it to a part of the distribution with lower weather sensitivity, even without changing any observable household characteristic. This indirect resilience effect of income support is captured automatically when distributional regression is used in Step 1. It is not present in linear regression results.
-
-### The Decomposition Tab
-
-The Decomposition tab reports, for each household or welfare decile:
-
-- **Main effect** — direct welfare change, broken down into cash transfer and covariate shift components.
-- **Resilience effect** — change in weather sensitivity, broken down into interaction and repositioning components.
-- **Total effect** — the sum of main and resilience effects.
-
-Effects are reported both in welfare units and as percentage changes. The channel totals reconcile with the exceedance curve results in the Results tab.
-
-::: {.callout-note}
-## How the regression engine affects policy results
-
-The choice of regression engine in Step 1 has important consequences for policy analysis in Step 3:
-
-**Linear regression** can only produce a resilience effect through the interaction channel. The modified covariate must appear in an interaction with a weather variable in the Step 1 specification. Cash transfers that raise income have no resilience effect in a linear model unless a cash × weather interaction is explicitly included — which is uncommon. As a result, the resilience effects of social protection programmes tend to be understated.
-
-**Distributional regression (RIF)** captures resilience through both the interaction channel and the repositioning channel. Cash transfers automatically build resilience by shifting poor households to less weather-vulnerable parts of the welfare distribution, even without any interaction term. This is the more complete measure of total resilience, particularly for poverty-focused analyses.
-
-When comparing policy effects across engine choices, expect the RIF engine to show larger total resilience effects, especially for cash transfer and social protection programmes.
+::: {.callout-warning appearance="simple"}
+### Extrapolation from the Training Data
+The policy simulation applies Step 1 coefficients to a modified survey. If the policy moves households to covariate values rarely or never observed in the training data — for example, near-universal electrification in a survey with low baseline access — the coefficients estimated from observed variation may not represent welfare outcomes in that counterfactual regime. This is the covariate-level counterpart of the *Extrapolation Under Climate Change* caveat on the Step 1 and Step 2 pages; the before/after distributions above show how far the levers push the sample.
 :::
 
-### Limitations
+#### Interpreting the Decomposition tab
 
-**Model-conditional effects.** All policy effects are conditional on the Step 1 model. A policy that targets a covariate not included in the model — or included as a main effect without an interaction — will produce only a main effect, even if the true policy also reduces weather sensitivity.
+The Decomposition tab splits the total policy effect into its channels (formal definitions in [Methodology detail](#methodology-detail)):
 
-**No general equilibrium.** The simulation modifies household-level characteristics but treats the broader economic environment (prices, wages, labour demand) as fixed. Policies with economy-wide effects may be under- or overstated.
+- **Main effect** — direct welfare change, decomposed into the cash-transfer effect (social protection) and the covariate-shift effect (infrastructure, digital, labour market, education).
+- **Resilience effect** — change in weather sensitivity, decomposed into the interaction channel (both engines) and the repositioning channel (RIF engine only).
+- **Total effect** — the sum of both.
 
-**Extrapolation from the training data.** The policy simulation applies Step 1 coefficients to a modified survey. If the policy moves households to covariate values rarely or never observed in the training data (for example, near-universal electrification in a survey with low baseline access), the coefficients estimated from the observed data may not accurately represent welfare outcomes in that counterfactual regime.
+Panels:
 
+- **Policy effect decomposition by welfare decile** — stacked bars of the average effect per channel by baseline welfare decile (decile 1 = poorest), in percentage change of welfare, evaluated at the historical-mean weather hazard. RIF models show three channels; linear models two.
+- **Decomposition summary** — the population-weighted mean effect per channel in log points and per cent (mean ± SE, median). SEs are propagated from the Step 1 coefficient covariance via the delta method; the total's SE preserves cross-channel covariance and is therefore not the sum of the channel SEs. A warning banner appears when the model contains no weather × policy interaction terms (the interaction channel is zero).
+- **Weather β curve** (RIF only) — the weather sensitivity $\hat\beta_W(\tau)$ across the welfare distribution, one panel per weather variable. The repositioning channel arises from households moving along this curve.
+- **Policy effect decomposition across climate scenarios** — the same channels per SSP × projection period, with boxplots showing within-period year-to-year variation for the weather-sensitive channels (repositioning, interaction, total); the main effect is constant across years and drawn as points. The dashed line at zero is the historical baseline mean.
 
+Channel totals reconcile exactly with the baseline-vs-policy gap in the Results tab — the policy series is constructed from these deltas.
 
-
-# DEPRECIATED
-
-## 3.6 Interpreting Results
-
-Results show the policy's impact on two dimensions, displayed as overlaid exceedance curves (baseline vs. policy counterfactual):
-
-- **Welfare level** — a vertical shift of the exceedance curve indicates a direct change in average welfare. An upward shift (for welfare) or leftward shift (for poverty) means households are better off on average under the policy.
-- **Weather sensitivity / resilience** — a change in the slope of the exceedance curve indicates that the relationship between weather and welfare has changed. A flatter curve under the policy means households are less exposed to weather-driven welfare swings — i.e. the policy improves resilience.
-
-**How policies work in the model:**
-
-- **Infrastructure, digital, and labour market policies** modify the covariate values for affected households. The welfare change is computed through the regression coefficients estimated in Step 1. If a variable appears in an interaction term with a weather variable (Step 1, interaction settings), changing it will also change the weather sensitivity of welfare — this is how these policies produce resilience effects.
-- **Social protection policies** add a direct income transfer to eligible households, shifting their welfare upward by the transfer amount. When triggered by weather events, the transfer partially offsets weather-driven welfare losses.
-
-::: {.callout-note}
-## Development status
-Infrastructure, digital inclusion, and labour market scenario results are available in the current release. The full social protection simulation — including trigger activation, targeting errors, and budget mechanics — is under active development.
+::: {.callout-tip appearance="simple"}
+### Reading the Channels
+- Compare the resilience effects of policy types: infrastructure and digital policies reduce weather sensitivity when their variables appear in interaction terms in Step 1; labour-market policies shift sectoral composition and can change exposure differently.
+- Run multiple policies individually before combining them, so each combined effect can be attributed to its components.
 :::
 
-## Tips and Common Issues
+::: {.callout-note appearance="simple"}
+### How the Regression Engine Affects Policy Results
+The choice of regression engine in Step 1 has important consequences for policy analysis:
 
-- **Tip:** A policy that flattens the exceedance curve without shifting its level indicates a pure resilience effect — the policy does not change average welfare but reduces exposure to weather extremes. This is a distinct and valuable outcome for climate adaptation.
-- **Tip:** Compare the resilience effects of different policy types. Infrastructure and digital policies tend to reduce weather sensitivity when the relevant variables appear in interaction terms in Step 1; labour market policies shift the sectoral composition and can affect exposure to weather shocks differently.
-- **Tip:** Run multiple policies individually before combining them. This allows you to attribute the combined effect to its components.
-- **Issue:** If a policy produces no change in weather sensitivity, check whether the modified variable was included as an interaction term in Step 1. Variables that only enter the model as main-effect covariates will shift the welfare level but not the slope of the exceedance curve.
-- **Issue:** Policy effects are conditional on the Step 1 model specification. Policies that target variables not present in the survey data, or not selected as covariates, will have no effect in the simulation.
+**Linear regression** can produce a resilience effect only through the interaction channel — the modified covariate must appear in a weather × covariate interaction in the Step 1 specification. Cash transfers that raise income have no resilience effect in a linear model unless a cash × weather interaction is explicitly included (uncommon), so the resilience effects of social-protection programmes tend to be understated.
 
-## Policy Effects: Decomposition into Channels {#policy-decomposition}
+**Distributional regression (RIF)** captures resilience through both the interaction channel and the repositioning channel: cash transfers automatically build resilience by shifting poor households to less weather-vulnerable parts of the welfare distribution, even without any interaction term. This is the more complete measure of total resilience, particularly for poverty-focused analyses.
 
+When comparing policy effects across engine choices, expect the RIF engine to show larger total resilience effects, especially for cash-transfer and social-protection programmes.
+:::
 
+## Methodology detail {#methodology-detail}
 
+### Applying Policies to the Survey
 
-# DEPRECIATED:
+Policy levers mutate a copy of the baseline survey before it re-enters the Step 1 model (`apply_policy_to_svy`). Binary levers flip randomly selected households within the affected group; the health-travel-time lever scales or caps values; labour-market levers shift employment status and sector shares. Only variables present in the Step 1 model are mutated, so the Results, Diagnostics, and Decomposition tabs can never surface changes the model ignores. The social-protection transfer is the exception: it is added **after prediction, on the level scale** (`log(exp(ŷ) + transfer)` for log-transformed outcomes), because the transfer acts on welfare itself rather than on a modelled covariate. When the analysis unit is households, the entered per-household transfer is divided by household size so that it matches the per-capita welfare scale.
 
-Labor Market Indicators
-Modify aggregate labour market conditions by specifying changes in percentage points from the survey baseline:
+### Deriving the Policy Arm
 
-- **Labour force participation** — change in pp (−20 to +20 pp, default 0).
-- **Employment rate** — change in pp (−20 to +20 pp, default 0).
-- **Sectoral composition** — shift toward agriculture, manufacturing, or services.
+The policy results are not obtained by re-simulating every CMIP6 ensemble member. Instead, the run (a) passes the Step 2 baseline pipelines through untouched, and (b) adds each household's closed-form welfare delta $\Delta y_i$ — the same quantity the decomposition below reports — to every pipeline row, matched household-for-household via the survey row index. The policy series therefore shares the baseline's residual draws, weather realizations, and coefficient draws exactly, which makes the baseline/policy comparison internally consistent (a no-op policy yields an identical series) and keeps the policy run fast.
+
+::: {.callout-note appearance="simple"}
+### Approximations in the Policy Series
+- **SE bands use baseline covariates.** Coefficient-uncertainty bands on the policy series reuse the baseline's factor loadings rather than re-deriving them from the policy-modified design matrix. Central values are exact; bands are a close approximation except for large covariate shifts.
+- **Period-mean hazards.** The delta added to the Results-tab series is evaluated at each pipeline's period-mean weather, so year-to-year variation of the policy effect *within* a projection period is not shown there. The Decomposition tab's across-scenario panel does decompose year by year.
+- **Engine support.** The delta derivation requires the Step 1 engine to be linear (fixest) or RIF. If the decomposition is unavailable, the policy series silently equals the baseline.
+:::
+
+### Decomposition of Policy Effects
+
+For household $i$ with baseline (model-scale) welfare $y_i$, baseline quantile position $\tau_i = \hat F(y_i)$ on the training-outcome ECDF, and weather hazard $\bar W_{jt}$ (the per-location mean of the weather panel being evaluated — the historical window for the summary panels, a scenario's projection period in the across-scenario panel), the total simulated policy effect decomposes as:
+
+$$\Delta y_i = \underbrace{\Delta y_i^{\text{cash}} + \Delta y_i^{\text{covariate}}}_{\text{main effect}} + \underbrace{\Delta y_i^{\text{repositioning}} + \Delta y_i^{\text{interaction}}}_{\text{resilience effect}}$$
+
+- **Cash-transfer effect:** $\Delta y_i^{\text{cash}} = \log\big(\exp(y_i) + T_i\big) - y_i$ for log outcomes, where $T_i$ is the household's simulated daily transfer (zero when not eligible); $T_i$ directly for level outcomes.
+- **Covariate-shift effect:** $\Delta y_i^{\text{covariate}} = \sum_v \hat\beta_v(\tau_i) \, \Delta x_{v,i}$ — the Step 1 coefficients evaluated at the household's **pre-policy** quantile position, times the lever-induced covariate changes $\Delta x_{v,i}$.
+- **Repositioning channel** (RIF only): the main effect moves the household up the training-outcome ECDF to a post-policy position $\tau_i' = \hat F(y_i + \Delta y_i^{\text{main}})$; the weather coefficient moves along the $\beta_\tau$ curve accordingly, $\Delta y_i^{\text{repositioning}} = \big(\hat\beta_W(\tau_i') - \hat\beta_W(\tau_i)\big) \bar W_{jt}$. The channel is identically zero whenever the main effect is zero, and zero for linear models (constant $\hat\beta$).
+- **Interaction channel:** the policy changes the moderator in a weather × moderator term, so the effective weather coefficient changes by $\hat\gamma(\tau_i')\, \Delta M_i$; the channel contribution is $\hat\gamma(\tau_i') \, \bar W_{jt} \, \Delta M_i$, evaluated at the post-policy quantile position. Present for both linear and RIF engines.
+
+Per-channel standard errors are propagated alongside the point effects via the delta method, with coefficient standard errors interpolated along the $\beta_\tau$ curve under a diagonal (no cross-covariance) approximation; channel variances add to the total. Because baseline and policy households are paired on the same population, residual and survey-sampling uncertainty cancel — only coefficient uncertainty remains — and all channel SEs are zero when coefficient uncertainty is switched off in Step 2.
